@@ -53,10 +53,12 @@ $selected_project_id = isset($_GET["project_id"]) ? $_GET["project_id"] : null;
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Employee Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <?php
     $user_id = $_SESSION['user_id'];
@@ -88,13 +90,17 @@ $selected_project_id = isset($_GET["project_id"]) ? $_GET["project_id"] : null;
     </ul>
 
     <?php if ($selected_project_id): ?>
-        <h2>Tasks for <?php echo $leader_projects[array_search($selected_project_id, array_column($leader_projects, 'id'))]["title"]; ?></h2>
+        <h2>Tasks for
+            <?php echo $leader_projects[array_search($selected_project_id, array_column($leader_projects, 'id'))]["title"]; ?>
+        </h2>
         <button id="openTaskModal">➕ Create Task for This Project</button>
 
         <div id="taskModal" class="modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
-                <h2>Create Task for <?php echo $leader_projects[array_search($selected_project_id, array_column($leader_projects, 'id'))]["title"]; ?></h2>
+                <h2>Create Task for
+                    <?php echo $leader_projects[array_search($selected_project_id, array_column($leader_projects, 'id'))]["title"]; ?>
+                </h2>
                 <form id="addTaskForm">
                     <input type="hidden" name="project_id" value="<?php echo $selected_project_id; ?>">
 
@@ -124,19 +130,53 @@ $selected_project_id = isset($_GET["project_id"]) ? $_GET["project_id"] : null;
     <?php endif; ?>
 
     <style>
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000; }
-        .modal-content { position: relative; width: 400px; }
-        .close { position: absolute; top: 10px; right: 10px; cursor: pointer; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 400px;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
     </style>
 
     <script>
-        document.getElementById("openTaskModal").onclick = function() {
+        document.getElementById("openTaskModal").onclick = function () {
             document.getElementById("taskModal").style.display = "block";
         };
 
-        document.querySelector(".close").onclick = function() {
-            document.getElementById("taskModal").style.display = "none";
-        };
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("openTaskModal").onclick = function () {
+                document.getElementById("taskModal").style.display = "block";
+            };
+
+            document.querySelector("#taskModal .close").addEventListener("click", function () {
+                document.getElementById("taskModal").style.display = "none";
+            });
+
+            window.onclick = function (event) {
+                let modal = document.getElementById("taskModal");
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            };
+        });
+
 
         // Fetch employees dynamically
         fetch("fetch_employees.php")
@@ -150,21 +190,22 @@ $selected_project_id = isset($_GET["project_id"]) ? $_GET["project_id"] : null;
             });
 
         // Submit Task Form
-        document.getElementById("addTaskForm").onsubmit = function(e) {
+        document.getElementById("addTaskForm").onsubmit = function (e) {
             e.preventDefault();
-            
+
             let formData = new FormData(this);
 
             fetch("add_task.php", {
                 method: "POST",
                 body: formData
             })
-            .then(response => response.text())
-            .then(result => {
-                alert(result);
-                location.reload();
-            });
+                .then(response => response.text())
+                .then(result => {
+                    alert(result);
+                    location.reload();
+                });
         };
     </script>
 </body>
+
 </html>
