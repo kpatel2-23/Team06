@@ -7,7 +7,7 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
     exit();
 }
 
-$manager_id = $_SESSION['user_id']; // Get logged-in manager's ID
+$manager_id = $_SESSION['user_id'];
 
 // Get statistics only for this manager's projects
 $project_count = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id")->fetch_assoc()['count'];
@@ -42,10 +42,12 @@ $projects = $stmt->get_result();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Manager Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -63,7 +65,6 @@ $projects = $stmt->get_result();
             <div class="card">✅ Completed Projects: <?php echo $completed_projects; ?></div>
             <div class="card">⏳ Ongoing Projects: <?php echo $ongoing_projects; ?></div>
         </div>
-
         <h2>Team Workload Overview</h2>
         <table>
             <tr>
@@ -100,7 +101,7 @@ $projects = $stmt->get_result();
                     <td>
                         <button>🔍 View</button>
                         <button>🔄 Edit</button>
-                        <button>🗑️ Delete</button>
+                        <button class="delete-btn" data-project-id="<?php echo $row['id']; ?>">🗑️ Delete</button>
                     </td>
                 </tr>
             <?php endwhile; ?>
@@ -112,7 +113,7 @@ $projects = $stmt->get_result();
         <!-- Modal for Adding Project -->
         <div id="projectModal" class="modal">
             <div class="modal-content">
-                <span class="close">&times;</span>
+                <span class="close" onclick="closeModal()">&times;</span>
                 <h2>Add Project</h2>
                 <form id="addProjectForm">
                     <label>Title:</label>
@@ -132,32 +133,68 @@ $projects = $stmt->get_result();
                     </select>
 
                     <label>Team Leader:</label>
-                    <select id="team_leader" name="team_leader" required></select>
+                    <select id="team_leader" name="team_leader" class="select2" required></select>
 
                     <label>Assign Employees:</label>
-                    <select id="employees" name="employees[]" multiple></select>
+                    <select id="employees" name="employees[]" class="select2" multiple required></select>
 
                     <button type="submit">Add Project</button>
                 </form>
             </div>
         </div>
 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
         <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll(".delete-btn").forEach(button => {
+                    button.addEventListener("click", function () {
+                        let projectId = this.getAttribute("data-project-id");
+
+                        if (confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+                            fetch("delete_project.php", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                                body: "project_id=" + projectId
+                            })
+                                .then(response => response.text())
+                                .then(result => {
+                                    if (result === "success") {
+                                        alert("Project deleted successfully!");
+                                        this.closest("tr").remove(); // Remove the project row from UI
+                                    } else {
+                                        alert("Error deleting project: " + result);
+                                    }
+                                });
+                        }
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            function closeModal() {
+                document.getElementById("projectModal").style.display = "none";
+            }
+
             document.getElementById("openModal").onclick = function () {
                 document.getElementById("projectModal").style.display = "block";
-            };
-
-            document.querySelector(".close").onclick = function () {
-                document.getElementById("projectModal").style.display = "none";
             };
 
             window.onclick = function (event) {
                 let modal = document.getElementById("projectModal");
                 if (event.target === modal) {
-                    modal.style.display = "none";
+                    closeModal();
                 }
             };
 
+            // Initialize Select2
+            $(document).ready(function () {
+                $('.select2').select2();
+            });
+
+            // Fetch employees dynamically
             fetch("fetch_employees.php")
                 .then(response => response.json())
                 .then(data => {
@@ -171,6 +208,7 @@ $projects = $stmt->get_result();
                     });
                 });
 
+            // Handle form submission (AJAX)
             document.getElementById("addProjectForm").onsubmit = function (e) {
                 e.preventDefault();
                 let formData = new FormData(this);
@@ -179,11 +217,11 @@ $projects = $stmt->get_result();
                     method: "POST",
                     body: formData
                 })
-                .then(response => response.text())
-                .then(result => {
-                    alert(result);
-                    location.reload();
-                });
+                    .then(response => response.text())
+                    .then(result => {
+                        alert(result);
+                        location.reload();
+                    });
             };
         </script>
 
@@ -213,4 +251,5 @@ $projects = $stmt->get_result();
             }
         </style>
 </body>
+
 </html>

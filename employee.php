@@ -9,28 +9,31 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "employee") {
 
 $employee_id = $_SESSION["user_id"];
 
-// Fetch projects where the user is assigned OR is a Team Leader
+// Fetch only projects that still exist where the user is assigned OR is a Team Leader
 $sql = "SELECT DISTINCT p.id, p.title, p.description 
         FROM projects p 
         LEFT JOIN project_assignments pa ON p.id = pa.project_id
-        WHERE pa.employee_id = ? OR p.team_leader_id = ?";
+        WHERE (pa.employee_id = ? OR p.team_leader_id = ?) 
+        AND p.id IS NOT NULL";  // Ensures project still exists
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $employee_id, $employee_id);
 $stmt->execute();
 $projects = $stmt->get_result();
 
-// Fetch tasks where the employee is assigned OR is the creator (team leader)
+// Fetch only tasks that belong to existing projects
 $task_stmt = $conn->prepare("
     SELECT t.id, t.title, t.description, t.status, t.deadline, p.title AS project_name
     FROM tasks t
     JOIN projects p ON t.project_id = p.id
     LEFT JOIN task_assignments ta ON t.id = ta.task_id
-    WHERE ta.employee_id = ? OR t.created_by = ?
+    WHERE (ta.employee_id = ? OR t.created_by = ?) 
+    AND p.id IS NOT NULL  -- Ensures project still exists
     GROUP BY t.id
 ");
 $task_stmt->bind_param("ii", $employee_id, $employee_id);
 $task_stmt->execute();
 $tasks = $task_stmt->get_result();
+
 
 // Check if the user is a team leader for any project
 $leader_check = $conn->prepare("SELECT id, title FROM projects WHERE team_leader_id = ?");
