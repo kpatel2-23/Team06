@@ -365,17 +365,25 @@ $projects = $stmt->get_result();
                 });
             });
 
-            // Close modal when clicking (x) or outside
-            const viewModal = document.getElementById('viewProjectModal');
-            viewModal.querySelector('.close').onclick = function () {
-                viewModal.style.display = 'none';
-            };
+            document.addEventListener('DOMContentLoaded', function () {
+                // View button functionality (keep your existing view button code)
 
-            window.onclick = function (event) {
-                if (event.target == viewModal) {
+                // Add this for modal close functionality
+                const viewModal = document.getElementById('viewProjectModal');
+                const closeBtn = viewModal.querySelector('.close');
+
+                // Close on X button click
+                closeBtn.addEventListener('click', function () {
                     viewModal.style.display = 'none';
-                }
-            };
+                });
+
+                // Close on outside click
+                window.addEventListener('click', function (event) {
+                    if (event.target == viewModal) {
+                        viewModal.style.display = 'none';
+                    }
+                });
+            });
         </script>
 
         <style>
@@ -463,7 +471,7 @@ $projects = $stmt->get_result();
 
                 <!-- People Working Section -->
                 <div class="section">
-                    <h3>People Working</h3>
+                    <h3>Employees Assigned</h3>
                     <div id="employeeList"></div>
                 </div>
 
