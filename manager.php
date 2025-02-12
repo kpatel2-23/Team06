@@ -355,6 +355,7 @@ $projects = $stmt->get_result();
 
                             if (projectData) {
                                 document.getElementById('projectTitle').textContent = projectData.title;
+                                document.getElementById('teamLeaderName').textContent = projectData.team_leader_name;
                                 displayEmployeeList(projectData.employees);
                                 createPieChart(projectData.employees);
                                 createBarChart(projectData.employees);
@@ -365,12 +366,13 @@ $projects = $stmt->get_result();
                 });
             });
 
+            // Close modal when clicking (x) or outside
             document.addEventListener('DOMContentLoaded', function () {
                 // View button functionality (keep your existing view button code)
 
                 // Add this for modal close functionality
                 const viewModal = document.getElementById('viewProjectModal');
-                const closeBtn = viewModal.querySelector('.close');
+                const closeBtn = viewModal.querySelector('.close-btn');
 
                 // Close on X button click
                 closeBtn.addEventListener('click', function () {
@@ -404,7 +406,7 @@ $projects = $stmt->get_result();
                 width: 400px;
             }
 
-            .close {
+            .close-btn {
                 position: absolute;
                 top: 10px;
                 right: 10px;
@@ -462,16 +464,28 @@ $projects = $stmt->get_result();
                 padding: 10px;
                 margin: 10px 0;
             }
+
+            .team-leader {
+                margin: 10px 0 20px 0;
+                font-size: 16px;
+                color: #666;
+            }
+
+            .team-leader span {
+                font-weight: bold;
+                color: #333;
+            }
         </style>
 
         <div id="viewProjectModal" class="modal">
             <div class="modal-content">
-                <span class="close">&times;</span>
+                <button class="close-btn">&times;</button>
                 <h2>Project Details: <span id="projectTitle"></span></h2>
+                <p class="team-leader">Team Leader: <span id="teamLeaderName"></span></p>
 
-                <!-- People Working Section -->
+                <!-- Rest of your modal content -->
                 <div class="section">
-                    <h3>Employees Assigned</h3>
+                    <h3>People Working</h3>
                     <div id="employeeList"></div>
                 </div>
 

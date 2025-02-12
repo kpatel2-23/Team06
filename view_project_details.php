@@ -12,7 +12,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["project_id"])) {
     $manager_id = $_SESSION["user_id"];
     
     // Verify this project belongs to the current manager
-    $project_check = $conn->prepare("SELECT title FROM projects WHERE id = ? AND manager_id = ?");
+    $project_check = $conn->prepare("
+        SELECT p.title, u.name as team_leader_name 
+        FROM projects p
+        JOIN users u ON p.team_leader_id = u.id 
+        WHERE p.id = ? AND p.manager_id = ?
+    ");
     $project_check->bind_param("ii", $project_id, $manager_id);
     $project_check->execute();
     $project_result = $project_check->get_result();
@@ -56,6 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["project_id"])) {
     
     echo json_encode([
         'title' => $project_data['title'],
+        'team_leader_name' => $project_data['team_leader_name'],
         'employees' => $employees
     ]);
 } else {
