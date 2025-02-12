@@ -1,0 +1,23 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 50px;
+}
+.login-container {
+    width: 300px;
+    margin: 0 auto;
+}
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+}
+button {
+    padding: 10px 20px;
+    background: blue;
+    color: white;
+    border: none;
+}
+.error {
+    color: red;
+}
