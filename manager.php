@@ -225,6 +225,159 @@ $projects = $stmt->get_result();
             };
         </script>
 
+        <script>
+            async function fetchProjectDetails(projectId) {
+                try {
+                    const response = await fetch('view_project_details.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `project_id=${projectId}`
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error:', error);
+                    return null;
+                }
+            }
+
+            function displayEmployeeList(employees) {
+                const employeeList = document.getElementById('employeeList');
+                employeeList.innerHTML = '';
+
+                employees.forEach(emp => {
+                    const card = document.createElement('div');
+                    card.className = 'employee-card';
+                    card.innerHTML = `
+            <strong>${emp.name}</strong><br>
+            Total Tasks: ${emp.total_tasks}<br>
+            Completed: ${emp.completed_tasks}<br>
+            Pending: ${emp.pending_tasks}
+        `;
+                    employeeList.appendChild(card);
+                });
+            }
+
+            function createPieChart(employees) {
+                const ctx = document.getElementById('pieChart').getContext('2d');
+
+                if (window.taskDistributionChart) {
+                    window.taskDistributionChart.destroy();
+                }
+
+                const data = {
+                    labels: employees.map(emp => emp.name),
+                    datasets: [{
+                        data: employees.map(emp => emp.total_tasks),
+                        backgroundColor: employees.map((_, idx) =>
+                            `hsl(${(idx * 360) / employees.length}, 70%, 60%)`
+                        )
+                    }]
+                };
+
+                window.taskDistributionChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        }
+                    }
+                });
+            }
+
+            function createBarChart(employees) {
+                const ctx = document.getElementById('barChart').getContext('2d');
+
+                if (window.taskCompletionChart) {
+                    window.taskCompletionChart.destroy();
+                }
+
+                const data = {
+                    labels: employees.map(emp => emp.name),
+                    datasets: [
+                        {
+                            label: 'Completed Tasks',
+                            data: employees.map(emp => emp.completed_tasks),
+                            backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                        },
+                        {
+                            label: 'Pending Tasks',
+                            data: employees.map(emp => emp.pending_tasks),
+                            backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        }
+                    ]
+                };
+
+                window.taskCompletionChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: false
+                            },
+                            y: {
+                                beginAtZero: true,
+                                stacked: false,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Update the view button click handler in your existing script
+            document.addEventListener('DOMContentLoaded', function () {
+                // Find all buttons and filter for the ones with View text
+                document.querySelectorAll('button').forEach(button => {
+                    if (button.textContent.includes('🔍 View')) {
+                        button.onclick = async function () {
+                            const projectId = this.closest('tr').querySelector('.delete-btn').getAttribute('data-project-id');
+                            const modal = document.getElementById('viewProjectModal');
+
+                            if (!modal) {
+                                console.error('Modal not found!');
+                                return;
+                            }
+
+                            const projectData = await fetchProjectDetails(projectId);
+                            console.log('Project Data:', projectData); // For debugging
+
+                            if (projectData) {
+                                document.getElementById('projectTitle').textContent = projectData.title;
+                                displayEmployeeList(projectData.employees);
+                                createPieChart(projectData.employees);
+                                createBarChart(projectData.employees);
+                                modal.style.display = 'block';
+                            }
+                        };
+                    }
+                });
+            });
+
+            // Close modal when clicking (x) or outside
+            const viewModal = document.getElementById('viewProjectModal');
+            viewModal.querySelector('.close').onclick = function () {
+                viewModal.style.display = 'none';
+            };
+
+            window.onclick = function (event) {
+                if (event.target == viewModal) {
+                    viewModal.style.display = 'none';
+                }
+            };
+        </script>
+
         <style>
             .modal {
                 display: none;
@@ -249,7 +402,84 @@ $projects = $stmt->get_result();
                 right: 10px;
                 cursor: pointer;
             }
+
+            .modal-content {
+                width: 800px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .section {
+                margin: 20px 0;
+                padding: 20px;
+                border-bottom: 1px solid #eee;
+            }
+
+            #employeeList {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+                margin: 10px 0;
+            }
+
+            #pieChart {
+                height: 200px !important;
+                /* Smaller height for pie chart */
+                width: 100% !important;
+                max-width: 400px !important;
+                /* Limit maximum width */
+                margin: 0 auto !important;
+                /* Center the chart */
+            }
+
+            .employee-card {
+                background: #f5f5f5;
+                padding: 10px;
+                border-radius: 5px;
+                text-align: left;
+            }
+
+            #barChart {
+                height: 250px !important;
+                /* Height for bar chart */
+                width: 100% !important;
+            }
+
+            .chart-container {
+                height: 300px;
+                margin: 20px 0;
+            }
+
+            .section:has(canvas) {
+                padding: 10px;
+                margin: 10px 0;
+            }
         </style>
+
+        <div id="viewProjectModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Project Details: <span id="projectTitle"></span></h2>
+
+                <!-- People Working Section -->
+                <div class="section">
+                    <h3>People Working</h3>
+                    <div id="employeeList"></div>
+                </div>
+
+                <!-- Task Distribution Chart -->
+                <div class="section">
+                    <h3>Task Distribution</h3>
+                    <canvas id="pieChart"></canvas>
+                </div>
+
+                <!-- Task Completion Graph -->
+                <div class="section">
+                    <h3>Task Completion Status</h3>
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
 </body>
 
 </html>
