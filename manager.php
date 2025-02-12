@@ -100,7 +100,7 @@ $projects = $stmt->get_result();
                     <td><?php echo htmlspecialchars($row["priority"]); ?></td>
                     <td>
                         <button>🔍 View</button>
-                        <button>🔄 Edit</button>
+                        <button class="edit-btn" data-project-id="<?php echo $row['id']; ?>">✏️ Edit</button>
                         <button class="delete-btn" data-project-id="<?php echo $row['id']; ?>">🗑️ Delete</button>
                     </td>
                 </tr>
@@ -145,6 +145,15 @@ $projects = $stmt->get_result();
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+        <script>
+            document.querySelectorAll(".edit-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    let projectId = this.getAttribute("data-project-id");
+                    window.location.href = "edit_project.php?project_id=" + projectId;
+                });
+            });
+        </script>
 
         <script>
             document.addEventListener("DOMContentLoaded", function () {
