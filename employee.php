@@ -776,6 +776,8 @@ while ($row = $leader_result->fetch_assoc()) {
             setupFilters('.filter-btn-assigned-by-me', '#tasks-assigned-by-me');
         });
 
+        
+
     </script>
 
     <!-- View Project Modal -->
