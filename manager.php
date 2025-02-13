@@ -103,6 +103,8 @@ $projects = $stmt->get_result();
                         <button>🔄 Edit</button>
                         <button class="add-task-btn" data-project-id="<?php echo $row['id']; ?>"
                             data-project-title="<?php echo htmlspecialchars($row['title']); ?>">➕ Add Task</button>
+                        <button class="add-employee-btn" data-project-id="<?php echo $row['id']; ?>"
+                            data-project-title="<?php echo htmlspecialchars($row['title']); ?>">👥 Add Employee</button>
                         <button class="delete-btn" data-project-id="<?php echo $row['id']; ?>">🗑️ Delete</button>
                     </td>
                 </tr>
@@ -471,6 +473,118 @@ $projects = $stmt->get_result();
                     }
                 });
             });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.add-employee-btn').forEach(button => {
+                    button.addEventListener('click', async function () {
+                        const projectId = this.getAttribute('data-project-id');
+                        const projectTitle = this.getAttribute('data-project-title');
+                        const modal = document.getElementById('addEmployeeModal');
+
+                        document.getElementById('employeeProjectId').value = projectId;
+                        document.getElementById('projectTitleForEmployees').textContent = projectTitle;
+
+                        try {
+                            const response = await fetch('fetch_available_employees.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `project_id=${projectId}`
+                            });
+                            const data = await response.json();
+
+                            // Display recommended employees
+                            const recommendedContainer = document.getElementById('recommendedEmployees');
+                            recommendedContainer.innerHTML = data.recommended.map(emp => `
+                    <div class="recommended-employee-card">
+                        <strong>${emp.name}</strong>
+                        <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
+                        <div>⭐ Recommended due to low workload</div>
+                    </div>
+                `).join('');
+
+                            // Display all available employees
+                            const availableContainer = document.getElementById('availableEmployees');
+                            availableContainer.innerHTML = data.all_employees.map(emp => `
+                    <div class="employee-select-card">
+                        <input type="checkbox" name="employee_ids[]" value="${emp.id}">
+                        <div>
+                            <strong>${emp.name}</strong>
+                            <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                            modal.style.display = 'block';
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Error loading employees');
+                        }
+                    });
+                });
+
+                // Add Employee Modal close functionality
+                const addEmployeeModal = document.getElementById('addEmployeeModal');
+                if (addEmployeeModal) {
+                    const closeBtn = addEmployeeModal.querySelector('.close-btn');
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', function () {
+                            addEmployeeModal.style.display = 'none';
+                        });
+                    }
+
+                    // Close on outside click
+                    window.addEventListener('click', function (event) {
+                        if (event.target === addEmployeeModal) {
+                            addEmployeeModal.style.display = 'none';
+                        }
+                    });
+                }
+            });
+            // Handle employee assignment form submission
+            document.getElementById('assignEmployeesForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                try {
+                    const response = await fetch('assign_employees.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('Employees assigned successfully!');
+                        location.reload();
+                    } else {
+                        alert(result.error || 'Failed to assign employees');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error assigning employees');
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // Add Employee Modal close functionality
+                const addEmployeeModal = document.getElementById('addEmployeeModal');
+                const addEmployeeCloseBtn = addEmployeeModal.querySelector('.close-btn');
+
+                // Close on X button click
+                addEmployeeCloseBtn.addEventListener('click', function () {
+                    addEmployeeModal.style.display = 'none';
+                });
+
+                // Close on outside click
+                window.addEventListener('click', function (event) {
+                    if (event.target === addEmployeeModal) {
+                        addEmployeeModal.style.display = 'none';
+                    }
+                });
+            });
+
+
         </script>
 
         <style>
@@ -596,6 +710,62 @@ $projects = $stmt->get_result();
             #addTaskForm button[type="submit"]:hover {
                 background-color: #45a049;
             }
+
+            .employee-recommendations {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+                margin: 15px 0;
+            }
+
+            .recommended-employee-card {
+                background-color: #e3f2fd;
+                padding: 15px;
+                border-radius: 8px;
+                border: 2px solid #2196f3;
+            }
+
+            .available-employees-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+                margin: 15px 0;
+            }
+
+            .employee-select-card {
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .employee-select-card input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+            }
+
+            .task-count {
+                color: #666;
+                font-size: 0.9em;
+                margin-top: 5px;
+            }
+
+            .submit-btn {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-top: 20px;
+                width: 100%;
+            }
+
+            .submit-btn:hover {
+                background-color: #45a049;
+            }
         </style>
 
         <div id="viewProjectModal" class="modal">
@@ -651,6 +821,27 @@ $projects = $stmt->get_result();
 
                     <button type="submit">Create Task</button>
                 </form>
+            </div>
+        </div>
+
+        <div id="addEmployeeModal" class="modal">
+            <div class="modal-content">
+                <button class="close-btn">&times;</button>
+                <h2>Add Employees to Project: <span id="projectTitleForEmployees"></span></h2>
+
+                <div class="section">
+                    <h3>Recommended Employees</h3>
+                    <div id="recommendedEmployees" class="employee-recommendations"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Available Employees</h3>
+                    <form id="assignEmployeesForm">
+                        <input type="hidden" name="project_id" id="employeeProjectId">
+                        <div id="availableEmployees" class="available-employees-list"></div>
+                        <button type="submit" class="submit-btn">Assign Selected Employees</button>
+                    </form>
+                </div>
             </div>
         </div>
 </body>
