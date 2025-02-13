@@ -119,16 +119,27 @@ while ($row = $leader_result->fetch_assoc()) {
 
     <style>
         .modal {
-            display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.4);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            /* Increase padding for more space */
+            width: 50vw;
+            /* Adjust width as needed (e.g., 40vw, 60vw) */
+            max-width: 600px;
+            /* Prevent it from getting too large */
+            min-width: 300px;
+            /* Prevent it from getting too small */
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            /* Improve shadow */
+            border-radius: 10px;
+            /* Optional: Smooth corners */
             z-index: 1000;
+        }
+
+        .modal.show {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -156,6 +167,7 @@ while ($row = $leader_result->fetch_assoc()) {
             border: none;
             cursor: pointer;
             padding: 5px 10px;
+            color: red;
         }
 
         .close-btn:hover {
@@ -257,7 +269,7 @@ while ($row = $leader_result->fetch_assoc()) {
                             displayEmployeeList(projectData.employees);
                             createPieChart(projectData.employees);
                             createBarChart(projectData.employees);
-                            modal.style.display = 'block';
+                            modal.classList.add('show');
                         } else {
                             console.error('Invalid project data:', projectData);
                             alert('Error loading project details');
@@ -301,7 +313,7 @@ while ($row = $leader_result->fetch_assoc()) {
                             dropdownParent: modal
                         });
 
-                        modal.style.display = 'block';
+                        modal.classList.add('show');
                     } catch (error) {
                         console.error('Error:', error);
                         alert('Error loading employees');
@@ -312,14 +324,14 @@ while ($row = $leader_result->fetch_assoc()) {
             // Modal Close Functionality
             document.querySelectorAll('.close-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
-                    this.closest('.modal').style.display = 'none';
+                    this.closest('.modal').classList.remove('show');
                 });
             });
 
             // Close on outside click
             window.onclick = function (event) {
                 if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
+                    event.target.classList.remove('show');
                 }
             };
 
