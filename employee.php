@@ -20,6 +20,35 @@ $stmt->bind_param("ii", $employee_id, $employee_id);
 $stmt->execute();
 $projects = $stmt->get_result();
 
+// Fetch tasks assigned to the logged-in employee
+$assigned_to_me_stmt = $conn->prepare("
+    SELECT t.id, t.title, t.description, t.status, t.deadline, p.title AS project_name
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    LEFT JOIN task_assignments ta ON t.id = ta.task_id
+    WHERE ta.employee_id = ? 
+    AND p.id IS NOT NULL
+    GROUP BY t.id
+");
+$assigned_to_me_stmt->bind_param("i", $employee_id);
+$assigned_to_me_stmt->execute();
+$tasks_assigned_to_me = $assigned_to_me_stmt->get_result();
+
+// Fetch tasks that this employee (team leader) has assigned to others
+$assigned_by_me_stmt = $conn->prepare("
+    SELECT t.id, t.title, t.description, t.status, t.deadline, p.title AS project_name, u.name AS assigned_to
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    LEFT JOIN task_assignments ta ON t.id = ta.task_id
+    LEFT JOIN users u ON ta.employee_id = u.id
+    WHERE t.created_by = ? 
+    AND p.id IS NOT NULL
+    GROUP BY t.id, u.name
+");
+$assigned_by_me_stmt->bind_param("i", $employee_id);
+$assigned_by_me_stmt->execute();
+$tasks_assigned_by_me = $assigned_by_me_stmt->get_result();
+
 // Fetch only tasks that belong to existing projects
 $task_stmt = $conn->prepare("
     SELECT t.id, t.title, t.description, t.status, t.deadline, p.title AS project_name
@@ -66,30 +95,34 @@ while ($row = $leader_result->fetch_assoc()) {
     $user = $result->fetch_assoc();
     ?>
     <h1>Welcome, <?php echo htmlspecialchars($user['name']); ?>!</h1>
-    <a href="logout.php">Logout</a>
 
     <h2>Projects I'm Leading</h2>
     <?php if (!empty($leader_projects)): ?>
         <table>
             <tr>
                 <th>Project</th>
+                <th>Project Manager</th> <!-- New Column -->
                 <th>Status</th>
                 <th>Priority</th>
                 <th>Actions</th>
             </tr>
             <?php
             foreach ($leader_projects as $project):
-                // Get full project details
-                $proj_stmt = $conn->prepare("SELECT p.*, u.name as leader 
-                                       FROM projects p 
-                                       JOIN users u ON p.team_leader_id = u.id 
-                                       WHERE p.id = ?");
+                // Get full project details including the project manager
+                $proj_stmt = $conn->prepare("SELECT p.*, 
+                                                leader.name AS leader, 
+                                                manager.name AS manager 
+                                         FROM projects p
+                                         JOIN users leader ON p.team_leader_id = leader.id
+                                         JOIN users manager ON p.manager_id = manager.id
+                                         WHERE p.id = ?");
                 $proj_stmt->bind_param("i", $project["id"]);
                 $proj_stmt->execute();
                 $project_details = $proj_stmt->get_result()->fetch_assoc();
                 ?>
                 <tr>
                     <td><?php echo htmlspecialchars($project_details["title"]); ?></td>
+                    <td><?php echo htmlspecialchars($project_details["manager"]); ?></td> <!-- Display Project Manager -->
                     <td><?php echo htmlspecialchars($project_details["status"]); ?></td>
                     <td><?php echo htmlspecialchars($project_details["priority"]); ?></td>
                     <td>
@@ -105,38 +138,100 @@ while ($row = $leader_result->fetch_assoc()) {
         <p>You are not leading any projects currently.</p>
     <?php endif; ?>
 
+
     <h2>My Tasks</h2>
-    <ul>
-        <?php while ($task = $tasks->fetch_assoc()): ?>
-            <li>
-                <strong><?php echo htmlspecialchars($task["title"]); ?></strong> -
-                <?php echo htmlspecialchars($task["description"]); ?>
-                (<?php echo htmlspecialchars($task["status"]); ?>) -
-                <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
-            </li>
-        <?php endwhile; ?>
-    </ul>
+
+    <div class="task-container">
+        <!-- Left: Tasks Assigned to Me -->
+        <div class="task-section">
+            <h3>Tasks Assigned to Me</h3>
+            <!-- Filters for "Tasks Assigned to Me" -->
+            <div class="task-filters">
+                <button class="filter-btn filter-btn-assigned-to-me active" data-filter="all">All</button>
+                <button class="filter-btn filter-btn-assigned-to-me" data-filter="Not Started">Not Started</button>
+                <button class="filter-btn filter-btn-assigned-to-me" data-filter="In Progress">In Progress</button>
+                <button class="filter-btn filter-btn-assigned-to-me" data-filter="Completed">Completed</button>
+            </div>
+            <ul class="tasks-list" id="tasks-assigned-to-me">
+                <?php while ($task = $tasks_assigned_to_me->fetch_assoc()): ?>
+                    <li class="task-item" data-status="<?php echo htmlspecialchars($task["status"]); ?>">
+                        <div class="task-info">
+                            <strong><?php echo htmlspecialchars($task["title"]); ?></strong> -
+                            <?php echo htmlspecialchars($task["description"]); ?>
+                            <span class="task-status">(<?php echo htmlspecialchars($task["status"]); ?>)</span> -
+                            <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
+                        </div>
+                        <div class="task-actions">
+                            <?php if ($task["status"] == "Not Started"): ?>
+                                <button class="start-btn" data-task-id="<?php echo $task["id"]; ?>">Start</button>
+                            <?php elseif ($task["status"] == "In Progress"): ?>
+                                <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
+                            <?php endif; ?>
+                        </div>
+                    </li>
+                <?php endwhile; ?>
+            </ul>
+        </div>
+
+        <!-- Right: Tasks Assigned by Me -->
+        <div class="task-section">
+            <h3>Tasks I Have Assigned</h3>
+            <!-- Filters for "Tasks I Have Assigned" -->
+            <div class="task-filters">
+                <button class="filter-btn filter-btn-assigned-by-me active" data-filter="all">All</button>
+                <button class="filter-btn filter-btn-assigned-by-me" data-filter="Not Started">Not Started</button>
+                <button class="filter-btn filter-btn-assigned-by-me" data-filter="In Progress">In Progress</button>
+                <button class="filter-btn filter-btn-assigned-by-me" data-filter="Completed">Completed</button>
+            </div>
+            <ul class="tasks-list" id="tasks-assigned-by-me">
+                <?php while ($task = $tasks_assigned_by_me->fetch_assoc()): ?>
+                    <li class="task-item" data-status="<?php echo htmlspecialchars($task["status"]); ?>">
+                        <div class="task-info">
+                            <strong><?php echo htmlspecialchars($task["title"]); ?></strong> -
+                            <?php echo htmlspecialchars($task["description"]); ?>
+                            <span class="task-status">(<?php echo htmlspecialchars($task["status"]); ?>)</span> -
+                            <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
+                            <span class="assigned-to">Assigned to:
+                                <?php echo htmlspecialchars($task["assigned_to"]); ?></span>
+                        </div>
+                        <div class="task-actions">
+                            <?php if ($task["status"] == "Not Started"): ?>
+                                <button class="start-btn" data-task-id="<?php echo $task["id"]; ?>">Start</button>
+                            <?php elseif ($task["status"] == "In Progress"): ?>
+                                <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
+                            <?php endif; ?>
+                        </div>
+                    </li>
+                <?php endwhile; ?>
+            </ul>
+
+        </div>
+    </div>
+
 
     <style>
+        /* Modal Styling */
         .modal {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            /* Increase padding for more space */
-            width: 50vw;
-            /* Adjust width as needed (e.g., 40vw, 60vw) */
-            max-width: 600px;
-            /* Prevent it from getting too large */
-            min-width: 300px;
-            /* Prevent it from getting too small */
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            /* Improve shadow */
-            border-radius: 10px;
-            /* Optional: Smooth corners */
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            /* Dark transparent background */
+            display: none;
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
+            padding: 30px;
+        }
+
+        .employee-card {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
         }
 
         .modal.show {
@@ -147,15 +242,17 @@ while ($row = $leader_result->fetch_assoc()) {
 
         .modal-content {
             position: relative;
-            background-color: #fefefe;
+            background-color: #fff;
             padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
+            border-radius: 10px;
+            width: 50%;
+            max-width: 600px;
             max-height: 80vh;
             overflow-y: auto;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-in-out;
+            justify-content: center;
+            align-items: center;
         }
 
         .close-btn {
@@ -166,27 +263,27 @@ while ($row = $leader_result->fetch_assoc()) {
             background: none;
             border: none;
             cursor: pointer;
-            padding: 5px 10px;
             color: red;
         }
 
         .close-btn:hover {
-            color: red;
+            color: darkred;
         }
 
-        .section {
-            margin: 20px 0;
-            padding: 20px;
-            border-bottom: 1px solid #eee;
+        /* Fade-in Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
-        .employee-card {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 5px 0;
-        }
-
+        /* Table Styling */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -200,17 +297,128 @@ while ($row = $leader_result->fetch_assoc()) {
             border-bottom: 1px solid #ddd;
         }
 
+        /* Buttons */
         button {
             margin: 0 5px;
             padding: 5px 10px;
             cursor: pointer;
+            transition: 0.3s;
         }
 
-        #pieChart,
-        #barChart {
-            height: 300px !important;
+        button:hover {
+            opacity: 0.8;
         }
 
+        /* Task Containers */
+        .task-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .task-section {
+            width: 48%;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h3 {
+            margin-bottom: 10px;
+        }
+
+        /* Task Filters */
+        .task-filters {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            background-color: #000;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .filter-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        /* Task Lists */
+        .tasks-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            transition: 0.3s;
+        }
+
+        .task-item:hover {
+            background: #f1f1f1;
+        }
+
+        .task-info {
+            flex-grow: 1;
+        }
+
+        /* Task Buttons */
+        .start-btn,
+        .complete-btn {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .start-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .complete-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .start-btn:hover,
+        .complete-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Status Text */
+        .task-status {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .assigned-to {
+            font-style: italic;
+            color: #888;
+        }
+
+        /* Form Styling */
         #addTaskForm {
             display: flex;
             flex-direction: column;
@@ -223,6 +431,8 @@ while ($row = $leader_result->fetch_assoc()) {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
         #addTaskForm textarea {
@@ -230,8 +440,15 @@ while ($row = $leader_result->fetch_assoc()) {
             resize: vertical;
         }
 
+        /* Select2 Dropdown */
         .select2-container {
             width: 100% !important;
+        }
+
+        /* Charts */
+        #pieChart,
+        #barChart {
+            height: 300px !important;
         }
     </style>
 
@@ -449,6 +666,100 @@ while ($row = $leader_result->fetch_assoc()) {
                 });
             }
         });
+
+        // Task status update functionality
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('start-btn') || e.target.classList.contains('complete-btn')) {
+                const taskId = e.target.getAttribute('data-task-id');
+                const newStatus = e.target.classList.contains('start-btn') ? 'In Progress' : 'Completed';
+
+                updateTaskStatus(taskId, newStatus, e.target);
+            }
+        });
+
+        // Ensure updates also apply to the "Tasks I Have Assigned" section
+        async function updateTaskStatus(taskId, newStatus, button) {
+            try {
+                const response = await fetch('update_task_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `task_id=${taskId}&status=${encodeURIComponent(newStatus)}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const taskItem = button.closest('.task-item');
+                    const statusSpan = taskItem.querySelector('.task-status');
+                    statusSpan.textContent = `(${newStatus})`;
+
+                    // Update data-status attribute
+                    taskItem.setAttribute('data-status', newStatus);
+
+                    // Update button
+                    if (newStatus === 'In Progress') {
+                        button.textContent = 'Complete';
+                        button.classList.remove('start-btn');
+                        button.classList.add('complete-btn');
+                    } else if (newStatus === 'Completed') {
+                        button.remove();
+                    }
+
+                    // Handle visibility based on current filter
+                    const activeFilter = document.querySelector('.filter-btn.active');
+                    const currentFilter = activeFilter.getAttribute('data-filter');
+
+                    if (currentFilter !== 'all' && currentFilter !== newStatus) {
+                        taskItem.style.display = 'none';
+                    } else {
+                        taskItem.style.display = '';
+                    }
+
+                    alert(`Task status updated to ${newStatus}`);
+                } else {
+                    alert(result.error || 'Failed to update task status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating task status');
+            }
+        }
+
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            function setupFilters(filterButtonsSelector, taskListSelector) {
+                const filterButtons = document.querySelectorAll(filterButtonsSelector);
+                const taskList = document.querySelector(taskListSelector);
+
+                filterButtons.forEach(button => {
+                    button.addEventListener('click', function () {
+                        const filter = button.getAttribute('data-filter');
+
+                        // Remove "active" class only from buttons in the same section
+                        filterButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+
+                        // Apply filter only to tasks in the related section
+                        taskList.querySelectorAll('.task-item').forEach(task => {
+                            const taskStatus = task.getAttribute('data-status');
+                            if (filter === 'all' || filter === taskStatus) {
+                                task.style.display = 'flex';
+                            } else {
+                                task.style.display = 'none';
+                            }
+                        });
+                    });
+                });
+            }
+
+            // Setup independent filters for both task sections
+            setupFilters('.filter-btn-assigned-to-me', '#tasks-assigned-to-me');
+            setupFilters('.filter-btn-assigned-by-me', '#tasks-assigned-by-me');
+        });
+
     </script>
 
     <!-- View Project Modal -->
