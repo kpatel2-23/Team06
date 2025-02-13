@@ -608,6 +608,36 @@ $projects = $stmt->get_result();
                 });
             });
 
+            document.getElementById('addTaskForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                // Debug: Log all form data
+                console.log('Form data:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+
+                try {
+                    const response = await fetch('add_task.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.text();
+                    console.log('Server response:', result); // Debug: Log server response
+
+                    if (result.includes('success')) {
+                        document.getElementById('taskModal').style.display = 'none';
+                        location.reload();
+                    } else {
+                        alert(result);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error creating task');
+                }
+            });
+
 
         </script>
 
@@ -841,7 +871,6 @@ $projects = $stmt->get_result();
                     </select>
 
                     <label>Assign Employees:</label>
-                    <input type="hidden" id="hiddenProjectId" name="project_id">
                     <select id="taskEmployees" name="employees[]" multiple required class="select2"></select>
 
                     <button type="submit">Create Task</button>

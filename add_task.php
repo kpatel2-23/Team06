@@ -17,6 +17,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $priority = $_POST["priority"];
     $employees = isset($_POST["employees"]) ? $_POST["employees"] : [];
 
+    $errors = [];
+    if (empty($project_id)) $errors[] = "Project ID is missing";
+    if (empty($title)) $errors[] = "Title is required";
+    if (empty($description)) $errors[] = "Description is required";
+    if (empty($deadline)) $errors[] = "Deadline is required";
+    if (empty($priority)) $errors[] = "Priority is required";
+    if (empty($employees)) $errors[] = "At least one employee must be assigned";
+
+    if (!empty($errors)) {
+        die("Error: " . implode(", ", $errors));
+    }
+
+
     // Ensure required fields are not empty
     if (empty($title) || empty($description) || empty($project_id) || empty($deadline) || empty($priority)) {
         die("Error: All fields are required.");
