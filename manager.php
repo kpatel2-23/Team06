@@ -236,19 +236,41 @@ $projects = $stmt->get_result();
                 });
 
                 // Task form submission
+                // document.getElementById('addTaskForm').addEventListener('submit', async function (e) {
+                //     e.preventDefault();
+
+                //     try {
+                //         const response = await fetch('add_task.php', {
+                //             method: 'POST',
+                //             body: new FormData(this)
+                //         });
+                //         const result = await response.text();
+                //         alert(result);
+                //         if (result.includes('success')) {
+                //             document.getElementById('taskModal').style.display = 'none';
+                //             location.reload();
+                //         }
+                //     } catch (error) {
+                //         console.error('Error:', error);
+                //         alert('Error creating task');
+                //     }
+                // });
+
                 document.getElementById('addTaskForm').addEventListener('submit', async function (e) {
                     e.preventDefault();
-
                     try {
                         const response = await fetch('add_task.php', {
                             method: 'POST',
                             body: new FormData(this)
                         });
-                        const result = await response.text();
-                        alert(result);
-                        if (result.includes('success')) {
-                            document.getElementById('taskModal').style.display = 'none';
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert(result.message);
+                            document.getElementById('taskModal').classList.remove('show'); // or style.display = 'none' depending on your modal implementation
                             location.reload();
+                        } else {
+                            alert(result.error || 'Error creating task');
                         }
                     } catch (error) {
                         console.error('Error:', error);
