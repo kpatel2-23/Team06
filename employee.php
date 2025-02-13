@@ -123,20 +123,15 @@ while ($row = $leader_result->fetch_assoc()) {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            /* Increase padding for more space */
-            width: 50vw;
-            /* Adjust width as needed (e.g., 40vw, 60vw) */
-            max-width: 600px;
-            /* Prevent it from getting too large */
-            min-width: 300px;
-            /* Prevent it from getting too small */
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            /* Improve shadow */
-            border-radius: 10px;
-            /* Optional: Smooth corners */
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            /* Dark transparent background */
+            display: none;
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
+            padding: 30px;
         }
 
         .modal.show {
@@ -147,15 +142,17 @@ while ($row = $leader_result->fetch_assoc()) {
 
         .modal-content {
             position: relative;
-            background-color: #fefefe;
+            background-color: #fff;
             padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
+            border-radius: 10px;
+            width: 50%;
+            max-width: 600px;
             max-height: 80vh;
             overflow-y: auto;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-in-out;
+            justify-content: center;
+            align-items: center;
         }
 
         .close-btn {
@@ -166,12 +163,23 @@ while ($row = $leader_result->fetch_assoc()) {
             background: none;
             border: none;
             cursor: pointer;
-            padding: 5px 10px;
             color: red;
         }
 
         .close-btn:hover {
-            color: red;
+            color: darkred;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .section {
