@@ -65,7 +65,7 @@ $projects = $stmt->get_result();
             <div class="card">✅ Completed Projects: <?php echo $completed_projects; ?></div>
             <div class="card">⏳ Ongoing Projects: <?php echo $ongoing_projects; ?></div>
         </div>
-        <h2>Team Workload Overview</h2>
+        <h2>Employee Workload Overview</h2>
         <table>
             <tr>
                 <th>Employee</th>
@@ -100,7 +100,9 @@ $projects = $stmt->get_result();
                     <td><?php echo htmlspecialchars($row["priority"]); ?></td>
                     <td>
                         <button>🔍 View</button>
-                        <button class="edit-btn" data-project-id="<?php echo $row['id']; ?>">✏️ Edit</button>
+                        <button>🔄 Edit</button>
+                        <button class="add-task-btn" data-project-id="<?php echo $row['id']; ?>"
+                            data-project-title="<?php echo htmlspecialchars($row['title']); ?>">➕ Add Task</button>
                         <button class="delete-btn" data-project-id="<?php echo $row['id']; ?>">🗑️ Delete</button>
                     </td>
                 </tr>
@@ -147,15 +149,6 @@ $projects = $stmt->get_result();
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
         <script>
-            document.querySelectorAll(".edit-btn").forEach(button => {
-                button.addEventListener("click", function () {
-                    let projectId = this.getAttribute("data-project-id");
-                    window.location.href = "edit_project.php?project_id=" + projectId;
-                });
-            });
-        </script>
-
-        <script>
             document.addEventListener("DOMContentLoaded", function () {
                 document.querySelectorAll(".delete-btn").forEach(button => {
                     button.addEventListener("click", function () {
@@ -178,6 +171,89 @@ $projects = $stmt->get_result();
                                 });
                         }
                     });
+                });
+            });
+
+            // Task Modal Functionality
+            document.addEventListener('DOMContentLoaded', function () {
+                // Add Task button click handler
+                document.querySelectorAll('.add-task-btn').forEach(button => {
+                    button.addEventListener('click', async function () {
+                        const projectId = this.getAttribute('data-project-id');
+                        const projectTitle = this.getAttribute('data-project-title');
+                        const taskModal = document.getElementById('taskModal');
+
+                        // Set project information
+                        document.getElementById('taskProjectId').value = projectId;
+                        document.getElementById('projectTitleForTask').textContent = projectTitle;
+
+                        // Fetch employees assigned to this project
+                        try {
+                            const response = await fetch('fetch_project_employees.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `project_id=${projectId}`
+                            });
+                            const employees = await response.json();
+
+                            // Populate employee dropdown
+                            const employeesDropdown = document.getElementById('taskEmployees');
+                            employeesDropdown.innerHTML = '';
+                            employees.forEach(emp => {
+                                const option = new Option(emp.name, emp.id);
+                                employeesDropdown.appendChild(option);
+                            });
+
+                            // Initialize Select2 for the employees dropdown
+                            $(employeesDropdown).select2({
+                                dropdownParent: taskModal
+                            });
+
+                            // Show the modal
+                            taskModal.style.display = 'block';
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Error loading employees');
+                        }
+                    });
+                });
+
+                // Task form submission
+                document.getElementById('addTaskForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    try {
+                        const response = await fetch('add_task.php', {
+                            method: 'POST',
+                            body: new FormData(this)
+                        });
+                        const result = await response.text();
+                        alert(result);
+                        if (result.includes('success')) {
+                            document.getElementById('taskModal').style.display = 'none';
+                            location.reload();
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error creating task');
+                    }
+                });
+
+                // Close task modal
+                const taskModal = document.getElementById('taskModal');
+                const taskCloseBtn = taskModal.querySelector('.close-btn');
+
+                taskCloseBtn.addEventListener('click', function () {
+                    taskModal.style.display = 'none';
+                });
+
+                // Close on outside click
+                window.addEventListener('click', function (event) {
+                    if (event.target === taskModal) {
+                        taskModal.style.display = 'none';
+                    }
                 });
             });
         </script>
@@ -484,6 +560,42 @@ $projects = $stmt->get_result();
                 font-weight: bold;
                 color: #333;
             }
+
+            .select2-container {
+                width: 100% !important;
+            }
+
+            #addTaskForm {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            #addTaskForm input,
+            #addTaskForm textarea,
+            #addTaskForm select {
+                width: 100%;
+                padding: 8px;
+                margin-top: 5px;
+            }
+
+            #addTaskForm textarea {
+                height: 100px;
+                resize: vertical;
+            }
+
+            #addTaskForm button[type="submit"] {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            #addTaskForm button[type="submit"]:hover {
+                background-color: #45a049;
+            }
         </style>
 
         <div id="viewProjectModal" class="modal">
@@ -509,6 +621,36 @@ $projects = $stmt->get_result();
                     <h3>Task Completion Status</h3>
                     <canvas id="barChart"></canvas>
                 </div>
+            </div>
+        </div>
+        <div id="taskModal" class="modal">
+            <div class="modal-content">
+                <button class="close-btn">&times;</button>
+                <h2>Create Task for: <span id="projectTitleForTask"></span></h2>
+                <form id="addTaskForm">
+                    <input type="hidden" name="project_id" id="taskProjectId">
+
+                    <label>Task Title:</label>
+                    <input type="text" name="title" required>
+
+                    <label>Description:</label>
+                    <textarea name="description" required></textarea>
+
+                    <label>Deadline:</label>
+                    <input type="date" name="deadline" required>
+
+                    <label>Priority:</label>
+                    <select name="priority" required>
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+
+                    <label>Assign Employees:</label>
+                    <select id="taskEmployees" name="employees[]" multiple required class="select2"></select>
+
+                    <button type="submit">Create Task</button>
+                </form>
             </div>
         </div>
 </body>
