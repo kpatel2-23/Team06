@@ -66,7 +66,6 @@ while ($row = $leader_result->fetch_assoc()) {
     $user = $result->fetch_assoc();
     ?>
     <h1>Welcome, <?php echo htmlspecialchars($user['name']); ?>!</h1>
-    <a href="logout.php">Logout</a>
 
     <h2>Projects I'm Leading</h2>
     <?php if (!empty($leader_projects)): ?>
@@ -106,13 +105,29 @@ while ($row = $leader_result->fetch_assoc()) {
     <?php endif; ?>
 
     <h2>My Tasks</h2>
-    <ul>
+
+    <div class="task-filters">
+        <button class="filter-btn active" data-filter="all">All Tasks</button>
+        <button class="filter-btn" data-filter="Not Started">Not Started</button>
+        <button class="filter-btn" data-filter="In Progress">In Progress</button>
+        <button class="filter-btn" data-filter="Completed">Completed</button>
+    </div>
+    <ul class="tasks-list">
         <?php while ($task = $tasks->fetch_assoc()): ?>
-            <li>
-                <strong><?php echo htmlspecialchars($task["title"]); ?></strong> -
-                <?php echo htmlspecialchars($task["description"]); ?>
-                (<?php echo htmlspecialchars($task["status"]); ?>) -
-                <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
+            <li class="task-item" data-status="<?php echo htmlspecialchars($task["status"]); ?>">
+                <div class="task-info">
+                    <strong><?php echo htmlspecialchars($task["title"]); ?></strong> -
+                    <?php echo htmlspecialchars($task["description"]); ?>
+                    <span class="task-status">(<?php echo htmlspecialchars($task["status"]); ?>)</span> -
+                    <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
+                </div>
+                <div class="task-actions">
+                    <?php if ($task["status"] == "Not Started"): ?>
+                        <button class="start-btn" data-task-id="<?php echo $task["id"]; ?>">Start</button>
+                    <?php elseif ($task["status"] == "In Progress"): ?>
+                        <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
+                    <?php endif; ?>
+                </div>
             </li>
         <?php endwhile; ?>
     </ul>
@@ -240,6 +255,78 @@ while ($row = $leader_result->fetch_assoc()) {
 
         .select2-container {
             width: 100% !important;
+        }
+
+        .tasks-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .task-info {
+            flex-grow: 1;
+        }
+
+        .task-actions {
+            margin-left: 20px;
+        }
+
+        .start-btn,
+        .complete-btn {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .start-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .complete-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .task-status {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .task-filters {
+            margin: 20px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: 2px solid #ddd;
+            background-color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .filter-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
         }
     </style>
 
@@ -455,6 +542,139 @@ while ($row = $leader_result->fetch_assoc()) {
         `;
                     employeeList.appendChild(card);
                 });
+            }
+        });
+
+        // Task status update functionality
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('start-btn') || e.target.classList.contains('complete-btn')) {
+                const taskId = e.target.getAttribute('data-task-id');
+                const newStatus = e.target.classList.contains('start-btn') ? 'In Progress' : 'Completed';
+
+                updateTaskStatus(taskId, newStatus, e.target);
+            }
+        });
+
+        async function updateTaskStatus(taskId, newStatus, button) {
+            try {
+                const response = await fetch('update_task_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `task_id=${taskId}&status=${encodeURIComponent(newStatus)}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const taskItem = button.closest('.task-item');
+                    const statusSpan = taskItem.querySelector('.task-status');
+                    statusSpan.textContent = `(${newStatus})`;
+
+                    // Update data-status attribute
+                    taskItem.setAttribute('data-status', newStatus);
+
+                    // Update button
+                    if (newStatus === 'In Progress') {
+                        button.textContent = 'Complete';
+                        button.classList.remove('start-btn');
+                        button.classList.add('complete-btn');
+                    } else if (newStatus === 'Completed') {
+                        button.remove();
+                    }
+
+                    // Handle visibility based on current filter
+                    const activeFilter = document.querySelector('.filter-btn.active');
+                    const currentFilter = activeFilter.getAttribute('data-filter');
+
+                    // If we're viewing a specific filter, hide the task if it doesn't match
+                    if (currentFilter !== 'all' && currentFilter !== newStatus) {
+                        taskItem.style.display = 'none';
+                    } else {
+                        taskItem.style.display = '';
+                    }
+
+                    alert(`Task status updated to ${newStatus}`);
+                } else {
+                    alert(result.error || 'Failed to update task status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating task status');
+            }
+        }
+
+        // Task filtering functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const taskItems = document.querySelectorAll('.task-item');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    button.classList.add('active');
+
+                    const filterValue = button.getAttribute('data-filter');
+
+                    taskItems.forEach(task => {
+                        const taskStatus = task.getAttribute('data-status');
+                        if (filterValue === 'all' || filterValue === taskStatus) {
+                            task.style.display = '';
+                        } else {
+                            task.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // After status update, update the visibility based on current filter
+            async function updateTaskStatus(taskId, newStatus, button) {
+                try {
+                    const response = await fetch('update_task_status.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `task_id=${taskId}&status=${encodeURIComponent(newStatus)}`
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const taskItem = button.closest('.task-item');
+                        const statusSpan = taskItem.querySelector('.task-status');
+                        statusSpan.textContent = `(${newStatus})`;
+
+                        // Update data-status attribute
+                        taskItem.setAttribute('data-status', newStatus);
+
+                        // Update button
+                        if (newStatus === 'In Progress') {
+                            button.textContent = 'Complete';
+                            button.classList.remove('start-btn');
+                            button.classList.add('complete-btn');
+                        } else if (newStatus === 'Completed') {
+                            button.remove();
+                        }
+
+                        // Check current filter and hide/show accordingly
+                        const activeFilter = document.querySelector('.filter-btn.active');
+                        const filterValue = activeFilter.getAttribute('data-filter');
+                        if (filterValue !== 'all' && filterValue !== newStatus) {
+                            taskItem.style.display = 'none';
+                        }
+
+                        alert(`Task status updated to ${newStatus}`);
+                    } else {
+                        alert(result.error || 'Failed to update task status');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error updating task status');
+                }
             }
         });
     </script>
