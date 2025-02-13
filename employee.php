@@ -224,6 +224,14 @@ while ($row = $leader_result->fetch_assoc()) {
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            /* Dark transparent background */
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
             padding: 30px;
         }
 
@@ -243,12 +251,20 @@ while ($row = $leader_result->fetch_assoc()) {
         .modal-content {
             position: relative;
             background-color: #fff;
+            background-color: #fff;
             padding: 20px;
+            border-radius: 10px;
+            width: 50%;
+            max-width: 600px;
             border-radius: 10px;
             width: 50%;
             max-width: 600px;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-in-out;
+            justify-content: center;
+            align-items: center;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             animation: fadeIn 0.3s ease-in-out;
             justify-content: center;
