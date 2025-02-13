@@ -176,6 +176,19 @@ $projects = $stmt->get_result();
                 });
             });
 
+
+            document.addEventListener("DOMContentLoaded", function () {
+                document.body.addEventListener("click", async function (event) {
+                    if (event.target.classList.contains("add-task-btn")) {
+                        const projectId = event.target.getAttribute("data-project-id");
+
+                        // 🛠 **Force employee refresh when opening modal**
+                        await loadProjectEmployees(projectId);
+                    }
+                });
+            });
+
+
             // Task Modal Functionality
             document.addEventListener('DOMContentLoaded', function () {
                 // Add Task button click handler
@@ -543,28 +556,39 @@ $projects = $stmt->get_result();
                 }
             });
             // Handle employee assignment form submission
-            document.getElementById('assignEmployeesForm').addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const formData = new FormData(this);
+            $(document).ready(function () {
+                $("#assignEmployeesForm").submit(function (e) {
+                    e.preventDefault();
 
-                try {
-                    const response = await fetch('assign_employees.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const result = await response.json();
+                    // Get project ID from the hidden input inside the modal
+                    let selectedProjectId = $("#employeeProjectId").val();
+                    let selectedEmployees = $("input[name='employee_ids[]']:checked").map(function () {
+                        return $(this).val();
+                    }).get(); // Collect selected employees as an array
 
-                    if (result.success) {
-                        alert('Employees assigned successfully!');
-                        location.reload();
-                    } else {
-                        alert(result.error || 'Failed to assign employees');
+                    if (!selectedProjectId || selectedEmployees.length === 0) {
+                        alert("Please select at least one employee.");
+                        return;
                     }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error assigning employees');
-                }
+
+                    $.ajax({
+                        url: "assign_employees.php",
+                        type: "POST",
+                        data: { project_id: selectedProjectId, employee_ids: selectedEmployees },
+                        success: function (response) {
+                            let data = JSON.parse(response);
+                            if (data.success) {
+                                alert("Employees added successfully!");
+                                loadProjectEmployees(selectedProjectId); // Refresh employees dropdown
+                            } else {
+                                alert("Failed: " + data.message);
+                            }
+                        }
+                    });
+                });
             });
+
+
 
             document.addEventListener('DOMContentLoaded', function () {
                 // Add Employee Modal close functionality
@@ -817,6 +841,7 @@ $projects = $stmt->get_result();
                     </select>
 
                     <label>Assign Employees:</label>
+                    <input type="hidden" id="hiddenProjectId" name="project_id">
                     <select id="taskEmployees" name="employees[]" multiple required class="select2"></select>
 
                     <button type="submit">Create Task</button>

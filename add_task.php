@@ -1,5 +1,5 @@
 <?php
-session_start(); // Ensure session is started
+session_start();
 include("db_config.php");
 
 // Check if the user is logged in
@@ -31,19 +31,83 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Assign employees to the task
         if (!empty($employees)) {
+            $assign_stmt = $conn->prepare("INSERT INTO task_assignments (task_id, employee_id) VALUES (?, ?)");
             foreach ($employees as $emp_id) {
-                $assign_stmt = $conn->prepare("INSERT INTO task_assignments (task_id, employee_id) VALUES (?, ?)");
                 $assign_stmt->bind_param("ii", $task_id, $emp_id);
                 $assign_stmt->execute();
-                $assign_stmt->close();
             }
+            $assign_stmt->close();
         }
 
-        echo "Task added successfully!";
+        echo json_encode(["success" => true, "message" => "Task added successfully!"]);
     } else {
-        echo "Error: " . $stmt->error;
+        echo json_encode(["error" => "Error: " . $stmt->error]);
     }
 
     $stmt->close();
 }
 ?>
+
+<!-- ✅ JavaScript: Automatically Refresh Assignable Employees After Adding a Task -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    // When project is selected, update the employee dropdown
+    $("#projectSelect").on("change", function () {
+        let projectId = $(this).val();
+        if (projectId) {
+            loadProjectEmployees(projectId);
+        }
+    });
+
+    // Function to fetch and update employees dynamically
+    function loadProjectEmployees(projectId) {
+        $.ajax({
+            url: "fetch_project_employees.php",
+            type: "POST",
+            data: { project_id: projectId },
+            cache: false,
+            success: function (response) {
+                let employees = JSON.parse(response);
+                $("#taskEmployees").empty(); // Clear previous options
+                employees.forEach(emp => {
+                    $("#taskEmployees").append(new Option(emp.name, emp.id));
+                });
+
+                // Reinitialize Select2 if used
+                $("#taskEmployees").trigger("change");
+            },
+            error: function () {
+                alert("Failed to load employees.");
+            }
+        });
+    }
+
+    // Ensure employee dropdown updates after assigning new employees
+    $("#assignEmployeesForm").submit(function (e) {
+        e.preventDefault();
+        let selectedProjectId = $("#projectSelect").val();
+        let selectedEmployees = $("#employeeSelect").val();
+
+        if (!selectedProjectId || selectedEmployees.length === 0) {
+            alert("Please select a project and at least one employee.");
+            return;
+        }
+
+        $.ajax({
+            url: "assign_employees.php",
+            type: "POST",
+            data: { project_id: selectedProjectId, employee_ids: selectedEmployees },
+            success: function (response) {
+                let data = JSON.parse(response);
+                if (data.success) {
+                    alert("Employees added successfully!");
+                    loadProjectEmployees(selectedProjectId); // Refresh employee dropdown
+                } else {
+                    alert("Failed: " + data.message);
+                }
+            }
+        });
+    });
+});
+</script>
