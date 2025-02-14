@@ -287,6 +287,16 @@ while ($row = $leader_result->fetch_assoc()) {
 
 
     <style>
+        .no-available-employees-message {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #64748b;
+            font-size: 1.1em;
+        }
+
         .no-tasks-message {
             text-align: center;
             padding: 30px;
@@ -1221,27 +1231,33 @@ while ($row = $leader_result->fetch_assoc()) {
                         });
                         const data = await response.json();
 
-                        // Display recommended employees
-                        const recommendedContainer = document.getElementById('recommendedEmployees');
-                        recommendedContainer.innerHTML = data.recommended.map(emp => `
-                    <div class="recommended-employee-card">
-                        <strong>${emp.name}</strong>
-                        <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
-                        <div>⭐ Recommended due to low workload</div>
-                    </div>
-                `).join('');
-
-                        // Display all available employees
-                        const availableContainer = document.getElementById('availableEmployees');
-                        availableContainer.innerHTML = data.all_employees.map(emp => `
-                    <div class="employee-select-card">
-                        <input type="checkbox" name="employee_ids[]" value="${emp.id}">
-                        <div>
+                        // Check if there are no available employees
+                        if (data.all_employees.length === 0) {
+                            const availableContainer = document.getElementById('availableEmployees');
+                            availableContainer.innerHTML = '<p>No available employees to assign.</p>';
+                        } else {
+                            // Display recommended employees
+                            const recommendedContainer = document.getElementById('recommendedEmployees');
+                            recommendedContainer.innerHTML = data.recommended.map(emp => `
+                        <div class="recommended-employee-card">
                             <strong>${emp.name}</strong>
                             <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
+                            <div>⭐ Recommended due to low workload</div>
                         </div>
-                    </div>
-                `).join('');
+                    `).join('');
+
+                            // Display all available employees
+                            const availableContainer = document.getElementById('availableEmployees');
+                            availableContainer.innerHTML = data.all_employees.map(emp => `
+                        <div class="employee-select-card">
+                            <input type="checkbox" name="employee_ids[]" value="${emp.id}">
+                            <div>
+                                <strong>${emp.name}</strong>
+                                <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                        }
 
                         modal.classList.add('show');
                     } catch (error) {

@@ -39,8 +39,7 @@ $user = $result->fetch_assoc();
     .navbar .center-section {
         flex-grow: 1;
         text-align: center;
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 23px;
         margin-right: 120px;
     }
 
