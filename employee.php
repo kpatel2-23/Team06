@@ -442,27 +442,34 @@ while ($row = $leader_result->fetch_assoc()) {
 
         /* Modal Styling */
         .modal {
+            display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            /* Dark transparent background */
-            display: none;
-            justify-content: center;
-            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            /* Dark transparent background */
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 30px;
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        #employeeList {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
         }
 
         .employee-card {
@@ -480,52 +487,159 @@ while ($row = $leader_result->fetch_assoc()) {
 
         .modal-content {
             position: relative;
-            background-color: #fff;
-            background-color: #fff;
+            background: white;
+            width: 90%;
+            height: 600px;
+            max-width: 600px;
+            margin: 50 auto;
             padding: 20px;
-            border-radius: 10px;
-            width: 50%;
-            max-width: 600px;
-            border-radius: 10px;
-            width: 50%;
-            max-width: 600px;
-            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
             overflow-y: auto;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.3s ease-in-out;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.3s ease-in-out;
-            justify-content: center;
-            align-items: center;
         }
 
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: red;
-        }
-
-        .close-btn:hover {
-            color: darkred;
-        }
-
-        /* Fade-in Animation */
-        @keyframes fadeIn {
+        @keyframes slideIn {
             from {
+                transform: translateY(-30px);
                 opacity: 0;
-                transform: scale(0.95);
             }
 
             to {
+                transform: translateY(0);
                 opacity: 1;
-                transform: scale(1);
+            }
+        }
+
+        .close-btn,
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 24px;
+            color: #666;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover,
+        .close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #F8CE08;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+            outline: none;
+        }
+
+        /* Select2 Customization */
+        .select2-container {
+            margin-bottom: 15px;
+            width: 100% !important;
+        }
+
+        .select2-container--default .select2-selection--single,
+        .select2-container--default .select2-selection--multiple {
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            min-height: 45px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #F8CE08 !important;
+            border: none !important;
+            color: white !important;
+            border-radius: 4px !important;
+            padding: 5px 10px !important;
+        }
+
+        /* Submit Button */
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: #F8CE08;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover {
+            background: #F8CE08;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.2);
+        }
+
+        /* Priority Select Styling */
+        select[name="priority"] option[value="High"] {
+            color: #e53e3e;
+        }
+
+        select[name="priority"] option[value="Medium"] {
+            color: #d69e2e;
+        }
+
+        select[name="priority"] option[value="Low"] {
+            color: #38a169;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+                padding: 20px;
             }
         }
 
@@ -581,25 +695,28 @@ while ($row = $leader_result->fetch_assoc()) {
             flex-wrap: wrap;
             margin-bottom: 10px;
             gap: 10px;
+            align-items: center;
+            justify-content: center;
         }
 
         .filter-btn {
             padding: 8px 16px;
-            border: 2px solid #ddd;
-            background-color: #000;
+            border: 2px solid #F8CE08;
+            background-color: white;
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
+            color: black;
         }
 
         .filter-btn:hover {
-            background-color: #f0f0f0;
+            background-color: #F8CE08;
         }
 
         .filter-btn.active {
-            background-color: #4CAF50;
+            background-color: #F8CE08;
             color: white;
-            border-color: #4CAF50;
+            border-color: #F8CE08;
         }
 
         /* Task Lists */
@@ -733,7 +850,7 @@ while ($row = $leader_result->fetch_assoc()) {
         }
 
         .submit-btn {
-            background-color: #4CAF50;
+            background-color: #F8CE08;
             color: white;
             padding: 10px 20px;
             border: none;
@@ -744,7 +861,7 @@ while ($row = $leader_result->fetch_assoc()) {
         }
 
         .submit-btn:hover {
-            background-color: #45a049;
+            background-color: #F8CE08;
         }
 
         .projects-section {
@@ -1323,37 +1440,49 @@ while ($row = $leader_result->fetch_assoc()) {
     <div id="taskModal" class="modal">
         <div class="modal-content">
             <button class="close-btn">&times;</button>
-            <h2>Create Task for: <span id="projectTitleForTask"></span></h2>
+            <h2>Add Task to: <span id="projectTitleForTask"></span></h2>
             <form id="addTaskForm">
                 <input type="hidden" name="project_id" id="taskProjectId">
 
-                <label>Task Title:</label>
-                <input type="text" name="title" required>
+                <div class="form-group">
+                    <label>Task Title</label>
+                    <input type="text" name="title" placeholder="Enter task title" required>
+                </div>
 
-                <label>Description:</label>
-                <textarea name="description" required></textarea>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" placeholder="Enter task description" required></textarea>
+                </div>
 
-                <label>Deadline:</label>
-                <input type="date" name="deadline" required>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" name="deadline" required>
+                </div>
 
-                <label>Priority:</label>
-                <select name="priority" required>
-                    <option value="Low">Low</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="High">High</option>
-                </select>
+                <div class="form-group">
+                    <label>Priority Level</label>
+                    <select name="priority" required>
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium" selected>Medium Priority</option>
+                        <option value="High">High Priority</option>
+                    </select>
+                </div>
 
-                <label>Assign Employees:</label>
-                <select id="taskEmployees" name="employees[]" multiple required></select>
+                <div class="form-group">
+                    <label>Assign Team Members</label>
+                    <select id="taskEmployees" name="employees[]" multiple required class="select2"></select>
+                </div>
 
                 <button type="submit">Create Task</button>
             </form>
         </div>
     </div>
+
     <div id="addEmployeeModal" class="modal">
         <div class="modal-content">
             <button class="close-btn">&times;</button>
-            <h2>Add Employees to Project: <span id="projectTitleForEmployees"></span></h2>
+            <h2>Add Employees to Project: </h2>
+            <span id="projectTitleForEmployees"></span>
 
             <div class="section">
                 <h3>Recommended Employees</h3>
