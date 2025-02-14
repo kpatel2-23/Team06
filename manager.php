@@ -824,11 +824,12 @@ $projects = $stmt->get_result();
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             z-index: 1000;
+            width: 600px;
         }
 
         .modal-content {
             position: relative;
-            width: 400px;
+            width: 100%;
         }
 
         .close-btn {
@@ -1467,6 +1468,10 @@ $projects = $stmt->get_result();
             margin: 0;
         }
 
+        /* .assigned-tasks-section {
+            height: 100%;
+        } */
+
         .section-header {
             margin-bottom: 20px;
         }
@@ -1704,7 +1709,6 @@ $projects = $stmt->get_result();
     </div>
 
     <?php include("footer.php"); ?>
-    
 </body>
 
 </html>
