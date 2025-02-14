@@ -22,10 +22,12 @@ $projects = $stmt->get_result();
 
 // Fetch tasks assigned to the logged-in employee
 $assigned_to_me_stmt = $conn->prepare("
-    SELECT t.id, t.title, t.description, t.status, t.deadline, p.title AS project_name
+    SELECT t.id, t.title, t.description, t.status, t.deadline, t.priority, 
+           p.title AS project_name, u.name AS assigned_by
     FROM tasks t
     JOIN projects p ON t.project_id = p.id
     LEFT JOIN task_assignments ta ON t.id = ta.task_id
+    LEFT JOIN users u ON t.created_by = u.id
     WHERE ta.employee_id = ? 
     AND p.id IS NOT NULL
     GROUP BY t.id
@@ -36,11 +38,14 @@ $tasks_assigned_to_me = $assigned_to_me_stmt->get_result();
 
 // Fetch tasks that this employee (team leader) has assigned to others
 $assigned_by_me_stmt = $conn->prepare("
-    SELECT t.id, t.title, t.description, t.status, t.deadline, p.title AS project_name, u.name AS assigned_to
+    SELECT t.id, t.title, t.description, t.status, t.deadline, t.priority, 
+           p.title AS project_name, u.name AS assigned_to,
+           creator.name AS creator_name
     FROM tasks t
     JOIN projects p ON t.project_id = p.id
     LEFT JOIN task_assignments ta ON t.id = ta.task_id
     LEFT JOIN users u ON ta.employee_id = u.id
+    LEFT JOIN users creator ON t.created_by = creator.id
     WHERE t.created_by = ? 
     AND p.id IS NOT NULL
     GROUP BY t.id, u.name
@@ -192,64 +197,239 @@ while ($row = $leader_result->fetch_assoc()) {
                 <button class="filter-btn filter-btn-assigned-to-me" data-filter="In Progress">In Progress</button>
                 <button class="filter-btn filter-btn-assigned-to-me" data-filter="Completed">Completed</button>
             </div>
-            <ul class="tasks-list" id="tasks-assigned-to-me">
-                <?php while ($task = $tasks_assigned_to_me->fetch_assoc()): ?>
-                    <li class="task-item" data-status="<?php echo htmlspecialchars($task["status"]); ?>">
-                        <div class="task-info">
-                            <strong><?php echo htmlspecialchars($task["title"]); ?></strong> -
-                            <?php echo htmlspecialchars($task["description"]); ?>
-                            <span class="task-status">(<?php echo htmlspecialchars($task["status"]); ?>)</span> -
-                            <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
-                        </div>
-                        <div class="task-actions">
-                            <?php if ($task["status"] == "Not Started"): ?>
-                                <button class="start-btn" data-task-id="<?php echo $task["id"]; ?>">Start</button>
-                            <?php elseif ($task["status"] == "In Progress"): ?>
-                                <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
-                            <?php endif; ?>
-                        </div>
-                    </li>
-                <?php endwhile; ?>
-            </ul>
+            <?php if ($tasks_assigned_to_me->num_rows > 0): ?>
+                <ul class="tasks-list" id="tasks-assigned-to-me">
+                    <?php while ($task = $tasks_assigned_to_me->fetch_assoc()): ?>
+                        <li class="task-item" data-status="<?php echo htmlspecialchars($task["status"]); ?>">
+                            <div class="task-info-wrapper">
+                                <div class="task-main-info">
+                                    <strong><?php echo htmlspecialchars($task["title"]); ?></strong>
+                                    <p class="task-description"><?php echo htmlspecialchars($task["description"]); ?></p>
+                                    <div class="task-details">
+                                        <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
+                                        <span class="assigned-by">Assigned by:
+                                            <?php echo htmlspecialchars($task["assigned_by"]); ?></span>
+                                    </div>
+                                </div>
+                                <div class="task-status-wrapper">
+                                    <span class="task-status">(<?php echo htmlspecialchars($task["status"]); ?>)</span>
+                                    <span class="priority-badge <?php echo strtolower($task["priority"]); ?>">
+                                        <?php echo htmlspecialchars($task["priority"]); ?>
+                                    </span>
+                                    <div class="task-actions">
+                                        <?php if ($task["status"] == "Not Started"): ?>
+                                            <button class="start-btn" data-task-id="<?php echo $task["id"]; ?>">Start</button>
+                                        <?php elseif ($task["status"] == "In Progress"): ?>
+                                            <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    <?php endwhile; ?>
+                </ul>
+            <?php else: ?>
+                <div class="no-tasks-message">
+                    <p>No tasks are currently assigned to you.</p>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Right: Tasks Assigned by Me -->
         <div class="task-section">
             <h3>Tasks I Have Assigned</h3>
-            <!-- Filters for "Tasks I Have Assigned" -->
             <div class="task-filters">
                 <button class="filter-btn filter-btn-assigned-by-me active" data-filter="all">All</button>
                 <button class="filter-btn filter-btn-assigned-by-me" data-filter="Not Started">Not Started</button>
                 <button class="filter-btn filter-btn-assigned-by-me" data-filter="In Progress">In Progress</button>
                 <button class="filter-btn filter-btn-assigned-by-me" data-filter="Completed">Completed</button>
             </div>
-            <ul class="tasks-list" id="tasks-assigned-by-me">
-                <?php while ($task = $tasks_assigned_by_me->fetch_assoc()): ?>
-                    <li class="task-item" data-status="<?php echo htmlspecialchars($task["status"]); ?>">
-                        <div class="task-info">
-                            <strong><?php echo htmlspecialchars($task["title"]); ?></strong> -
-                            <?php echo htmlspecialchars($task["description"]); ?>
-                            <span class="task-status">(<?php echo htmlspecialchars($task["status"]); ?>)</span> -
-                            <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
-                            <span class="assigned-to">Assigned to:
-                                <?php echo htmlspecialchars($task["assigned_to"]); ?></span>
-                        </div>
-                        <div class="task-actions">
-                            <?php if ($task["status"] == "Not Started"): ?>
-                                <button class="start-btn" data-task-id="<?php echo $task["id"]; ?>">Start</button>
-                            <?php elseif ($task["status"] == "In Progress"): ?>
-                                <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
-                            <?php endif; ?>
-                        </div>
-                    </li>
-                <?php endwhile; ?>
-            </ul>
-
+            <?php if ($tasks_assigned_by_me->num_rows > 0): ?>
+                <ul class="tasks-list" id="tasks-assigned-by-me">
+                    <?php while ($task = $tasks_assigned_by_me->fetch_assoc()): ?>
+                        <li class="task-item" data-status="<?php echo htmlspecialchars($task["status"]); ?>">
+                            <div class="task-info-wrapper">
+                                <div class="task-main-info">
+                                    <strong><?php echo htmlspecialchars($task["title"]); ?></strong>
+                                    <p class="task-description"><?php echo htmlspecialchars($task["description"]); ?></p>
+                                    <div class="task-details">
+                                        <em>Project: <?php echo htmlspecialchars($task["project_name"]); ?></em>
+                                        <span class="assigned-to">Assigned to:
+                                            <?php echo htmlspecialchars($task["assigned_to"]); ?></span>
+                                        <span class="deadline">Due:
+                                            <?php echo date('M d, Y', strtotime($task["deadline"])); ?></span>
+                                    </div>
+                                </div>
+                                <div class="task-status-wrapper">
+                                    <span class="task-status">(<?php echo htmlspecialchars($task["status"]); ?>)</span>
+                                    <span class="priority-badge <?php echo strtolower($task["priority"]); ?>">
+                                        <?php echo htmlspecialchars($task["priority"]); ?>
+                                    </span>
+                                    <div class="task-actions">
+                                        <?php if ($task["status"] == "Not Started"): ?>
+                                            <button class="start-btn" data-task-id="<?php echo $task["id"]; ?>">Start</button>
+                                        <?php elseif ($task["status"] == "In Progress"): ?>
+                                            <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    <?php endwhile; ?>
+                </ul>
+            <?php else: ?>
+                <div class="no-tasks-message">
+                    <p>You have not assigned any tasks to others.</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
 
     <style>
+        .no-tasks-message {
+            text-align: center;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .no-tasks-message p {
+            color: #64748b;
+            font-size: 1.1em;
+            margin: 0;
+        }
+
+        .task-item {
+            display: flex;
+            padding: 15px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            transition: 0.3s;
+        }
+
+        .task-info-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .task-main-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .task-description {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .task-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .task-status-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .assigned-by {
+            color: #666;
+            font-style: italic;
+        }
+
+        .task-status {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .start-btn,
+        .complete-btn {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+
+        /* Update existing priority badge styles */
+        .priority-badge.high {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .priority-badge.medium {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-badge.low {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
+        /* Make task items more compact on smaller screens */
+        @media (max-width: 768px) {
+            .task-info-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .task-status-wrapper {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 10px;
+            }
+        }
+
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            margin-left: 8px;
+            display: inline-block;
+        }
+
+        .priority-badge.high {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .priority-badge.medium {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-badge.low {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
         /* Modal Styling */
         .modal {
             position: fixed;
