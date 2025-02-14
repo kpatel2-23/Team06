@@ -1175,6 +1175,8 @@ while ($row = $leader_result->fetch_assoc()) {
         </div>
     </div>
 
+    <?php include("footer.php"); ?>
+
 </body>
 
 </html>

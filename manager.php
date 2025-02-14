@@ -839,7 +839,7 @@ $projects = $stmt->get_result();
         }
 
         .modal-content {
-            width: 800px;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -1465,10 +1465,6 @@ $projects = $stmt->get_result();
             padding: 30px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             margin: 0;
-        }
-
-        .assigned-tasks-section {
-            height: 100%;
         }
 
         .section-header {
