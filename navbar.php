@@ -12,7 +12,7 @@ $user = $result->fetch_assoc();
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
-    
+
     /* Navbar Styling */
     .navbar {
         display: flex;
@@ -24,7 +24,7 @@ $user = $result->fetch_assoc();
         font-family: 'Poppins', sans-serif;
         border-radius: 10px;
     }
-    
+
     .navbar .left-section {
         display: flex;
         align-items: center;
@@ -39,7 +39,8 @@ $user = $result->fetch_assoc();
     .navbar .center-section {
         flex-grow: 1;
         text-align: center;
-        font-size: 23px;
+        font-size: 18px;
+        font-weight: bold;
         margin-right: 120px;
     }
 
@@ -101,10 +102,19 @@ $user = $result->fetch_assoc();
     }
 
     .nav-modal-content {
+        position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 100%;
+        width: 600px;
+        max-width: 90%;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 
     .profile-info {
@@ -193,7 +203,7 @@ $user = $result->fetch_assoc();
         document.getElementById("profileModal").style.display = "none";
     }
 
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         if (!event.target.closest(".profile")) {
             document.getElementById("profileDropdown").classList.remove("show");
         }
