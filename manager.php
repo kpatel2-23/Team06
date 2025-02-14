@@ -172,6 +172,7 @@ $projects = $stmt->get_result();
                                     <span class="task-status <?php echo strtolower($task["status"]); ?>">
                                         <?php echo htmlspecialchars($task["status"]); ?>
                                     </span>
+
                                 </div>
                                 <div class="task-title">
                                     <?php echo htmlspecialchars($task["title"]); ?>
@@ -188,6 +189,12 @@ $projects = $stmt->get_result();
                                 </div>
                                 <div class="task-description">
                                     <?php echo htmlspecialchars($task["description"]); ?>
+                                </div>
+                                <div class="task-priority">
+                                    <span class="label">Priority:</span>
+                                    <span class="priority-badge <?php echo strtolower($task["priority"]); ?>">
+                                        <?php echo htmlspecialchars($task["priority"]); ?>
+                                    </span>
                                 </div>
                             </div>
                         <?php endwhile; ?>
