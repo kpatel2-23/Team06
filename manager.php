@@ -161,43 +161,50 @@ $projects = $stmt->get_result();
                     ?>
 
                     <div class="tasks-grid">
-                        <?php while ($task = $assigned_tasks->fetch_assoc()): ?>
-                            <div class="task-card">
-                                <div class="task-header">
-                                    <div class="task-project">
-                                        <span class="label">Project:</span>
-                                        <span
-                                            class="project-name"><?php echo htmlspecialchars($task["project_name"]); ?></span>
-                                    </div>
-                                    <span class="task-status <?php echo strtolower($task["status"]); ?>">
-                                        <?php echo htmlspecialchars($task["status"]); ?>
-                                    </span>
-
-                                </div>
-                                <div class="task-title">
-                                    <?php echo htmlspecialchars($task["title"]); ?>
-                                </div>
-                                <div class="task-details">
-                                    <div class="task-assignee">
-                                        <span class="label">Assigned to:</span>
-                                        <?php echo htmlspecialchars($task["employee_name"]); ?>
-                                    </div>
-                                    <div class="task-deadline">
-                                        <span class="label">Deadline:</span>
-                                        <?php echo date('M d, Y', strtotime($task["deadline"])); ?>
-                                    </div>
-                                </div>
-                                <div class="task-description">
-                                    <?php echo htmlspecialchars($task["description"]); ?>
-                                </div>
-                                <div class="task-priority">
-                                    <span class="label">Priority:</span>
-                                    <span class="priority-badge <?php echo strtolower($task["priority"]); ?>">
-                                        <?php echo htmlspecialchars($task["priority"]); ?>
-                                    </span>
-                                </div>
+                        <?php if ($assigned_tasks->num_rows === 0): ?>
+                            <div class="no-data-message">
+                                <p>You haven't assigned any tasks yet. Click the "Add Task" button in the Projects section
+                                    to create your first task.</p>
                             </div>
-                        <?php endwhile; ?>
+                        <?php else: ?>
+                            <?php while ($task = $assigned_tasks->fetch_assoc()): ?>
+                                <div class="task-card">
+                                    <div class="task-header">
+                                        <div class="task-project">
+                                            <span class="label">Project:</span>
+                                            <span
+                                                class="project-name"><?php echo htmlspecialchars($task["project_name"]); ?></span>
+                                        </div>
+                                        <span class="task-status <?php echo strtolower($task["status"]); ?>">
+                                            <?php echo htmlspecialchars($task["status"]); ?>
+                                        </span>
+
+                                    </div>
+                                    <div class="task-title">
+                                        <?php echo htmlspecialchars($task["title"]); ?>
+                                    </div>
+                                    <div class="task-details">
+                                        <div class="task-assignee">
+                                            <span class="label">Assigned to:</span>
+                                            <?php echo htmlspecialchars($task["employee_name"]); ?>
+                                        </div>
+                                        <div class="task-deadline">
+                                            <span class="label">Deadline:</span>
+                                            <?php echo date('M d, Y', strtotime($task["deadline"])); ?>
+                                        </div>
+                                    </div>
+                                    <div class="task-description">
+                                        <?php echo htmlspecialchars($task["description"]); ?>
+                                    </div>
+                                    <div class="task-priority">
+                                        <span class="label">Priority:</span>
+                                        <span class="priority-badge <?php echo strtolower($task["priority"]); ?>">
+                                            <?php echo htmlspecialchars($task["priority"]); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -209,6 +216,21 @@ $projects = $stmt->get_result();
             <h2>Active Projects</h2>
             <button id="openModal" class="add-project-btn">➕ Add Project</button>
         </div>
+
+        <?php
+        // Query to fetch projects with team leader names
+        $projects_query = "
+        SELECT p.*, u.name as leader 
+        FROM projects p
+        JOIN users u ON p.team_leader_id = u.id
+        WHERE p.manager_id = ?
+        ORDER BY p.created_at DESC";
+
+        $stmt = $conn->prepare($projects_query);
+        $stmt->bind_param("i", $manager_id);
+        $stmt->execute();
+        $projects = $stmt->get_result();
+        ?>
 
         <div class="projects-table-container">
             <table class="projects-table">
@@ -222,49 +244,61 @@ $projects = $stmt->get_result();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($row = $projects->fetch_assoc()): ?>
+                    <?php if ($projects->num_rows === 0): ?>
                         <tr>
-                            <td>
-                                <div class="project-name"><?php echo htmlspecialchars($row["title"]); ?></div>
-                            </td>
-                            <td>
-                                <div class="team-leader-info">
-                                    <span class="leader-name"><?php echo htmlspecialchars($row["leader"]); ?></span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge <?php echo strtolower($row["status"]); ?>">
-                                    <?php echo htmlspecialchars($row["status"]); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="priority-badge <?php echo strtolower($row["priority"]); ?>">
-                                    <?php echo htmlspecialchars($row["priority"]); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="action-btn view-btn" data-project-id="<?php echo $row['id']; ?>">
-                                        🔍 View
-                                    </button>
-                                    <button class="action-btn edit-btn" data-project-id="<?php echo $row['id']; ?>">
-                                        🔄 Edit
-                                    </button>
-                                    <button class="action-btn add-task-btn" data-project-id="<?php echo $row['id']; ?>"
-                                        data-project-title="<?php echo htmlspecialchars($row['title']); ?>">
-                                        ➕ Add Task
-                                    </button>
-                                    <button class="action-btn add-employee-btn" data-project-id="<?php echo $row['id']; ?>"
-                                        data-project-title="<?php echo htmlspecialchars($row['title']); ?>">
-                                        👥 Add Employee
-                                    </button>
-                                    <button class="action-btn delete-btn" data-project-id="<?php echo $row['id']; ?>">
-                                        🗑️ Delete
-                                    </button>
+                            <td colspan="5">
+                                <div class="no-data-message">
+                                    <p>No active projects found. Click the "Add Project" button to create your first
+                                        project.</p>
                                 </div>
                             </td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php else: ?>
+                        <?php while ($row = $projects->fetch_assoc()): ?>
+                            <!-- Your existing project row code -->
+                            <tr>
+                                <td>
+                                    <div class="project-name"><?php echo htmlspecialchars($row["title"]); ?></div>
+                                </td>
+                                <td>
+                                    <div class="team-leader-info">
+                                        <span class="leader-name"><?php echo htmlspecialchars($row["leader"]); ?></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge <?php echo strtolower($row["status"]); ?>">
+                                        <?php echo htmlspecialchars($row["status"]); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="priority-badge <?php echo strtolower($row["priority"]); ?>">
+                                        <?php echo htmlspecialchars($row["priority"]); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn view-btn" data-project-id="<?php echo $row['id']; ?>">
+                                            🔍 View
+                                        </button>
+                                        <button class="action-btn edit-btn" data-project-id="<?php echo $row['id']; ?>">
+                                            🔄 Edit
+                                        </button>
+                                        <button class="action-btn add-task-btn" data-project-id="<?php echo $row['id']; ?>"
+                                            data-project-title="<?php echo htmlspecialchars($row['title']); ?>">
+                                            ➕ Add Task
+                                        </button>
+                                        <button class="action-btn add-employee-btn" data-project-id="<?php echo $row['id']; ?>"
+                                            data-project-title="<?php echo htmlspecialchars($row['title']); ?>">
+                                            👥 Add Employee
+                                        </button>
+                                        <button class="action-btn delete-btn" data-project-id="<?php echo $row['id']; ?>">
+                                            🗑️ Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -2131,6 +2165,35 @@ $projects = $stmt->get_result();
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 2.5rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #dee2e6;
+            margin: 1.5rem 0;
+        }
+
+        .no-data-message p {
+            color: #6c757d;
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .projects-table .no-data-message {
+            text-align: center;
+            padding: 2.5rem;
+            background-color: #f8f9fa;
+        }
+
+        .projects-table .no-data-message p {
+            color: #6c757d;
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1.5;
         }
     </style>
 
