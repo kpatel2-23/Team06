@@ -96,50 +96,87 @@ while ($row = $leader_result->fetch_assoc()) {
     ?>
     <h1>Welcome, <?php echo htmlspecialchars($user['name']); ?>!</h1>
 
-    <h2>Projects I'm Leading</h2>
-    <?php if (!empty($leader_projects)): ?>
-        <table>
-            <tr>
-                <th>Project</th>
-                <th>Project Manager</th> <!-- New Column -->
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Actions</th>
-            </tr>
-            <?php
-            foreach ($leader_projects as $project):
-                // Get full project details including the project manager
-                $proj_stmt = $conn->prepare("SELECT p.*, 
-                                                leader.name AS leader, 
-                                                manager.name AS manager 
-                                         FROM projects p
-                                         JOIN users leader ON p.team_leader_id = leader.id
-                                         JOIN users manager ON p.manager_id = manager.id
-                                         WHERE p.id = ?");
-                $proj_stmt->bind_param("i", $project["id"]);
-                $proj_stmt->execute();
-                $project_details = $proj_stmt->get_result()->fetch_assoc();
-                ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($project_details["title"]); ?></td>
-                    <td><?php echo htmlspecialchars($project_details["manager"]); ?></td> <!-- Display Project Manager -->
-                    <td><?php echo htmlspecialchars($project_details["status"]); ?></td>
-                    <td><?php echo htmlspecialchars($project_details["priority"]); ?></td>
-                    <td>
-                        <button class="view-btn" data-project-id="<?php echo $project["id"]; ?>">🔍 View</button>
-                        <button>🔄 Edit</button>
-                        <button class="add-task-btn" data-project-id="<?php echo $project["id"]; ?>"
-                            data-project-title="<?php echo htmlspecialchars($project_details["title"]); ?>">➕ Add Task</button>
-                        <button class="add-employee-btn" data-project-id="<?php echo $project["id"]; ?>"
-                            data-project-title="<?php echo htmlspecialchars($project_details["title"]); ?>">👥 Add
-                            Employee</button>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>You are not leading any projects currently.</p>
-    <?php endif; ?>
+    <div class="projects-section">
+        <div class="projects-header">
+            <h2>Projects I'm Leading</h2>
+        </div>
+
+        <?php if (!empty($leader_projects)): ?>
+            <div class="projects-table-container">
+                <table class="projects-table">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Project Manager</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        foreach ($leader_projects as $project):
+                            $proj_stmt = $conn->prepare("SELECT p.*, 
+                                                    leader.name AS leader, 
+                                                    manager.name AS manager 
+                                                FROM projects p
+                                                JOIN users leader ON p.team_leader_id = leader.id
+                                                JOIN users manager ON p.manager_id = manager.id
+                                                WHERE p.id = ?");
+                            $proj_stmt->bind_param("i", $project["id"]);
+                            $proj_stmt->execute();
+                            $project_details = $proj_stmt->get_result()->fetch_assoc();
+                            ?>
+                            <tr>
+                                <td>
+                                    <div class="project-name"><?php echo htmlspecialchars($project_details["title"]); ?></div>
+                                </td>
+                                <td>
+                                    <div class="team-leader-info">
+                                        <span
+                                            class="leader-name"><?php echo htmlspecialchars($project_details["manager"]); ?></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge <?php echo strtolower($project_details["status"]); ?>">
+                                        <?php echo htmlspecialchars($project_details["status"]); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="priority-badge <?php echo strtolower($project_details["priority"]); ?>">
+                                        <?php echo htmlspecialchars($project_details["priority"]); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn view-btn" data-project-id="<?php echo $project["id"]; ?>">
+                                            🔍 View
+                                        </button>
+                                        <button class="action-btn edit-btn" data-project-id="<?php echo $project["id"]; ?>">
+                                            🔄 Edit
+                                        </button>
+                                        <button class="action-btn add-task-btn" data-project-id="<?php echo $project["id"]; ?>"
+                                            data-project-title="<?php echo htmlspecialchars($project_details["title"]); ?>">
+                                            ➕ Add Task
+                                        </button>
+                                        <button class="action-btn add-employee-btn"
+                                            data-project-id="<?php echo $project["id"]; ?>"
+                                            data-project-title="<?php echo htmlspecialchars($project_details["title"]); ?>">
+                                            👥 Add Employee
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="no-projects-message">
+                <p>You are not leading any projects currently.</p>
+            </div>
+        <?php endif; ?>
+    </div>
 
 
     <h2>My Tasks</h2>
@@ -518,6 +555,139 @@ while ($row = $leader_result->fetch_assoc()) {
 
         .submit-btn:hover {
             background-color: #45a049;
+        }
+
+        .projects-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .projects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .projects-table-container {
+            overflow-x: auto;
+        }
+
+        .projects-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .projects-table thead th {
+            background-color: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+        }
+
+        .projects-table tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        .projects-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .projects-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-badge,
+        .priority-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .status-badge.not-started {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .status-badge.in-progress {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .status-badge.completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .priority-badge.low {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .priority-badge.medium {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-badge.high {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .action-btn.view-btn {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .action-btn.edit-btn {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .action-btn.add-task-btn {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .action-btn.add-employee-btn {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .no-projects-message {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            background: #f8fafc;
+            border-radius: 10px;
         }
     </style>
 
@@ -1004,8 +1174,7 @@ while ($row = $leader_result->fetch_assoc()) {
             </div>
         </div>
     </div>
-    
-    <?php include("footer.php"); ?>
+
 </body>
 
 </html>
