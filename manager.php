@@ -57,76 +57,137 @@ $projects = $stmt->get_result();
     $user = $result->fetch_assoc();
     ?>
 
-    <div class="dashboard-container">
-        <!-- Left Side -->
-        <div class="dashboard-left">
-            <div class="welcome-section">
-                <div class="welcome-header">
-                    <h1>Welcome, <?php echo htmlspecialchars($user['name']); ?>!</h1>
-                    <p class="date"><?php echo date("l, F j, Y"); ?></p>
+    <div class="outer-container">
+        <div class="dashboard-container">
+            <!-- Left Side -->
+            <div class="dashboard-left">
+                <div class="welcome-section">
+                    <div class="welcome-header">
+                        <h1>Welcome, <?php echo htmlspecialchars($user['name']); ?>!</h1>
+                        <p class="date"><?php echo date("l, F j, Y"); ?></p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card total-projects">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-content">
+                            <h3>Total Projects</h3>
+                            <p class="stat-number"><?php echo $project_count; ?></p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card total-employees">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <h3>Total Employees</h3>
+                            <p class="stat-number"><?php echo $employee_count; ?></p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card completed-projects">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3>Completed Projects</h3>
+                            <p class="stat-number"><?php echo $completed_projects; ?></p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card ongoing-projects">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-content">
+                            <h3>Ongoing Projects</h3>
+                            <p class="stat-number"><?php echo $ongoing_projects; ?></p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card total-projects">
-                    <div class="stat-icon">🏆</div>
-                    <div class="stat-content">
-                        <h3>Total Projects</h3>
-                        <p class="stat-number"><?php echo $project_count; ?></p>
-                    </div>
-                </div>
-
-                <div class="stat-card total-employees">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-content">
-                        <h3>Total Employees</h3>
-                        <p class="stat-number"><?php echo $employee_count; ?></p>
-                    </div>
-                </div>
-
-                <div class="stat-card completed-projects">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-content">
-                        <h3>Completed Projects</h3>
-                        <p class="stat-number"><?php echo $completed_projects; ?></p>
-                    </div>
-                </div>
-
-                <div class="stat-card ongoing-projects">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-content">
-                        <h3>Ongoing Projects</h3>
-                        <p class="stat-number"><?php echo $ongoing_projects; ?></p>
+            <!-- Right Side -->
+            <div class="dashboard-right">
+                <div class="workload-section">
+                    <h2>Employee Workload Overview</h2>
+                    <div class="workload-table-container">
+                        <table class="workload-table">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Assigned Tasks</th>
+                                <th>Completed</th>
+                                <th>Remaining</th>
+                            </tr>
+                            <?php while ($row = $workload_result->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row["name"]); ?></td>
+                                    <td><span class="badge"><?php echo htmlspecialchars($row["assigned_tasks"]); ?></span>
+                                    </td>
+                                    <td><span
+                                            class="badge success"><?php echo htmlspecialchars($row["completed_tasks"]); ?></span>
+                                    </td>
+                                    <td><span
+                                            class="badge warning"><?php echo htmlspecialchars($row["assigned_tasks"] - $row["completed_tasks"]); ?></span>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="dashboard-bottom">
+            <div class="assigned-tasks-section">
+                <div class="section-header">
+                    <h2>Tasks I Have Assigned</h2>
+                </div>
+                <div class="tasks-container">
+                    <?php
+                    // Fetch tasks assigned by this manager
+                    $assigned_tasks_query = "
+                    SELECT t.*, p.title as project_name, u.name as employee_name, p.priority as project_priority
+                    FROM tasks t
+                    JOIN projects p ON t.project_id = p.id
+                    JOIN task_assignments ta ON t.id = ta.task_id
+                    JOIN users u ON ta.employee_id = u.id
+                    WHERE t.created_by = ?
+                    ORDER BY t.deadline ASC";
 
-        <!-- Right Side -->
-        <div class="dashboard-right">
-            <div class="workload-section">
-                <h2>Employee Workload Overview</h2>
-                <div class="workload-table-container">
-                    <table class="workload-table">
-                        <tr>
-                            <th>Employee</th>
-                            <th>Assigned Tasks</th>
-                            <th>Completed</th>
-                            <th>Remaining</th>
-                        </tr>
-                        <?php while ($row = $workload_result->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row["name"]); ?></td>
-                                <td><span class="badge"><?php echo htmlspecialchars($row["assigned_tasks"]); ?></span></td>
-                                <td><span
-                                        class="badge success"><?php echo htmlspecialchars($row["completed_tasks"]); ?></span>
-                                </td>
-                                <td><span
-                                        class="badge warning"><?php echo htmlspecialchars($row["assigned_tasks"] - $row["completed_tasks"]); ?></span>
-                                </td>
-                            </tr>
+                    $task_stmt = $conn->prepare($assigned_tasks_query);
+                    $task_stmt->bind_param("i", $manager_id);
+                    $task_stmt->execute();
+                    $assigned_tasks = $task_stmt->get_result();
+                    ?>
+
+                    <div class="tasks-grid">
+                        <?php while ($task = $assigned_tasks->fetch_assoc()): ?>
+                            <div class="task-card">
+                                <div class="task-header">
+                                    <div class="task-project">
+                                        <span class="label">Project:</span>
+                                        <span
+                                            class="project-name"><?php echo htmlspecialchars($task["project_name"]); ?></span>
+                                    </div>
+                                    <span class="task-status <?php echo strtolower($task["status"]); ?>">
+                                        <?php echo htmlspecialchars($task["status"]); ?>
+                                    </span>
+                                </div>
+                                <div class="task-title">
+                                    <?php echo htmlspecialchars($task["title"]); ?>
+                                </div>
+                                <div class="task-details">
+                                    <div class="task-assignee">
+                                        <span class="label">Assigned to:</span>
+                                        <?php echo htmlspecialchars($task["employee_name"]); ?>
+                                    </div>
+                                    <div class="task-deadline">
+                                        <span class="label">Deadline:</span>
+                                        <?php echo date('M d, Y', strtotime($task["deadline"])); ?>
+                                    </div>
+                                </div>
+                                <div class="task-description">
+                                    <?php echo htmlspecialchars($task["description"]); ?>
+                                </div>
+                            </div>
                         <?php endwhile; ?>
-                    </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1031,12 +1092,18 @@ $projects = $stmt->get_result();
             border-radius: 4px;
         }
 
+        .outer-container {
+            padding: 20px;
+            background-color: #f5f7fa;
+            min-height: calc(100vh - 60px);
+        }
+
         .dashboard-container {
             display: flex;
             gap: 30px;
             padding: 20px;
             background-color: #f5f7fa;
-            min-height: calc(100vh - 60px);
+            min-height: calc(60vh - 60px);
         }
 
         .dashboard-left {
@@ -1134,10 +1201,41 @@ $projects = $stmt->get_result();
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            height: 78%;
         }
 
         .workload-table-container {
-            overflow-x: auto;
+            max-height: 300px;
+            /* Set maximum height */
+            overflow-y: auto;
+            /* Enable vertical scrolling */
+            margin-top: 15px;
+        }
+
+        .workload-table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .workload-table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .workload-table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .workload-table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Make table header sticky */
+        .workload-table thead {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
         }
 
         .workload-table {
@@ -1359,6 +1457,145 @@ $projects = $stmt->get_result();
         .delete-btn:hover {
             background-color: #fecaca;
         }
+
+        .dashboard-bottom {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin: 0;
+        }
+
+        .assigned-tasks-section {
+            height: 100%;
+        }
+
+        .section-header {
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .tasks-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .task-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-project {
+            font-size: 0.9em;
+        }
+
+        .project-name {
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .task-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .task-status.not-started {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .task-status.in-progress {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .task-status.completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .task-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 10px 0;
+        }
+
+        .task-details {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .task-assignee,
+        .task-deadline {
+            color: #64748b;
+        }
+
+        .label {
+            color: #94a3b8;
+            margin-right: 5px;
+        }
+
+        .task-description {
+            font-size: 0.9em;
+            color: #64748b;
+            margin-top: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Scrollbar Styling */
+        .tasks-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .tasks-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .tasks-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .tasks-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 
     <div id="viewProjectModal" class="modal">
@@ -1469,6 +1706,9 @@ $projects = $stmt->get_result();
             <button id="confirmNo">No</button>
         </div>
     </div>
+
+    <?php include("footer.php"); ?>
+    
 </body>
 
 </html>
