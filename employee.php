@@ -1473,6 +1473,7 @@ while ($row = $leader_result->fetch_assoc()) {
                     const projectId = this.getAttribute("data-project-id");
                     const projectTitle = this.getAttribute("data-project-title");
                     const modal = document.getElementById("addEmployeeModal");
+                    const submitButton = document.querySelector('#assignEmployeesForm .submit-btn'); // Select submit button
 
                     document.getElementById("employeeProjectId").value = projectId;
                     document.getElementById("projectTitleForEmployees").textContent = projectTitle;
@@ -1485,27 +1486,39 @@ while ($row = $leader_result->fetch_assoc()) {
                         });
                         const data = await response.json();
 
-                        // Display recommended employees
-                        const recommendedContainer = document.getElementById("recommendedEmployees");
-                        recommendedContainer.innerHTML = data.recommended.map(emp => `
-                    <div class="recommended-employee-card">
-                        <strong>${emp.name}</strong>
-                        <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
-                        <div>⭐ Recommended due to low workload</div>
-                    </div>
-                `).join("");
+                        // Check if there are no available employees
+                        if (data.all_employees.length === 0) {
+                            const recommendedContainer = document.getElementById('recommendedEmployees');
+                            recommendedContainer.innerHTML = '<p>No available employees to assign.</p>';
+                            const availableContainer = document.getElementById('availableEmployees');
+                            availableContainer.innerHTML = '<p>No available employees to assign.</p>';
+                            submitButton.style.display = "none"; // Hide the button
 
-                        // Display all available employees
-                        const availableContainer = document.getElementById("availableEmployees");
-                        availableContainer.innerHTML = data.all_employees.map(emp => `
-                    <div class="employee-select-card">
-                        <input type="checkbox" name="employee_ids[]" value="${emp.id}">
-                        <div>
+                        } else {
+                            // Display recommended employees
+                            const recommendedContainer = document.getElementById('recommendedEmployees');
+                            recommendedContainer.innerHTML = data.recommended.map(emp => `
+                        <div class="recommended-employee-card">
                             <strong>${emp.name}</strong>
                             <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
+                            <div>⭐ Recommended due to low workload</div>
                         </div>
-                    </div>
-                `).join("");
+                    `).join('');
+
+                            // Display all available employees
+                            const availableContainer = document.getElementById('availableEmployees');
+                            availableContainer.innerHTML = data.all_employees.map(emp => `
+                        <div class="employee-select-card">
+                            <input type="checkbox" name="employee_ids[]" value="${emp.id}">
+                            <div>
+                                <strong>${emp.name}</strong>
+                                <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                            submitButton.style.display = "block";
+                        }
 
                         modal.style.display = "block";
                     } catch (error) {
@@ -1587,8 +1600,6 @@ while ($row = $leader_result->fetch_assoc()) {
                 }
             }
         });
-
-
 
     </script>
 
