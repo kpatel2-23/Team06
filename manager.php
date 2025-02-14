@@ -38,6 +38,8 @@ $stmt->execute();
 $projects = $stmt->get_result();
 ?>
 
+
+
 <?php include("navbar.php"); ?>
 
 <!DOCTYPE html>
@@ -262,32 +264,44 @@ $projects = $stmt->get_result();
     <!-- Modal for Adding Project -->
     <div id="projectModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Add Project</h2>
+            <button class="close" onclick="closeModal()">&times;</button>
+            <h2>Create New Project</h2>
             <form id="addProjectForm">
-                <label>Title:</label>
-                <input type="text" name="title" required>
+                <div class="form-group">
+                    <label>Project Title</label>
+                    <input type="text" name="title" placeholder="Enter project title" required>
+                </div>
 
-                <label>Description:</label>
-                <textarea name="description" required></textarea>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" placeholder="Enter project description" required></textarea>
+                </div>
 
-                <label>Deadline:</label>
-                <input type="date" name="deadline" required>
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="date" name="deadline" required>
+                </div>
 
-                <label>Priority:</label>
-                <select name="priority" required>
-                    <option value="Low">Low</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="High">High</option>
-                </select>
+                <div class="form-group">
+                    <label>Priority Level</label>
+                    <select name="priority" required>
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium" selected>Medium Priority</option>
+                        <option value="High">High Priority</option>
+                    </select>
+                </div>
 
-                <label>Team Leader:</label>
-                <select id="team_leader" name="team_leader" class="select2" required></select>
+                <div class="form-group">
+                    <label>Team Leader</label>
+                    <select id="team_leader" name="team_leader" class="select2" required></select>
+                </div>
 
-                <label>Assign Employees:</label>
-                <select id="employees" name="employees[]" class="select2" multiple required></select>
+                <div class="form-group">
+                    <label>Team Members</label>
+                    <select id="employees" name="employees[]" class="select2" multiple required></select>
+                </div>
 
-                <button type="submit">Add Project</button>
+                <button type="submit">Create Project</button>
             </form>
         </div>
     </div>
@@ -820,29 +834,183 @@ $projects = $stmt->get_result();
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
+            background-color: rgba(0, 0, 0, 0.5);
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            width: 600px;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .modal-content {
             position: relative;
-            width: 100%;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            cursor: pointer;
-        }
-
-        .modal-content {
-            width: 100%;
-            max-height: 90vh;
+            background: white;
+            width: 90%;
+            height: 600px;
+            max-width: 600px;
+            margin: 50 auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
             overflow-y: auto;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Close Button */
+        .close-btn,
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 24px;
+            color: #666;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover,
+        .close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        /* Form Styles */
+        .modal h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #F8CE08;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+            outline: none;
+        }
+
+        /* Select2 Customization */
+        .select2-container {
+            margin-bottom: 15px;
+            width: 100% !important;
+        }
+
+        .select2-container--default .select2-selection--single,
+        .select2-container--default .select2-selection--multiple {
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            min-height: 45px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #F8CE08 !important;
+            border: none !important;
+            color: white !important;
+            border-radius: 4px !important;
+            padding: 5px 10px !important;
+        }
+
+        /* Submit Button */
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: #F8CE08;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover {
+            background: #357ABD;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.2);
+        }
+
+        /* Priority Select Styling */
+        select[name="priority"] option[value="High"] {
+            color: #e53e3e;
+        }
+
+        select[name="priority"] option[value="Medium"] {
+            color: #d69e2e;
+        }
+
+        select[name="priority"] option[value="Low"] {
+            color: #38a169;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+                padding: 20px;
+            }
         }
 
         .section {
@@ -926,7 +1094,7 @@ $projects = $stmt->get_result();
         }
 
         #addTaskForm button[type="submit"] {
-            background-color: #4CAF50;
+            background-color: #F8CE08;
             color: white;
             padding: 10px;
             border: none;
@@ -980,7 +1148,7 @@ $projects = $stmt->get_result();
         }
 
         .submit-btn {
-            background-color: #4CAF50;
+            background-color: #F8CE08;
             color: white;
             padding: 10px 20px;
             border: none;
@@ -1058,7 +1226,7 @@ $projects = $stmt->get_result();
         #rearrangeBtn {
             margin-bottom: 20px;
             padding: 8px 16px;
-            background: #4CAF50;
+            background: #F8CE08;
             color: white;
             border: none;
             border-radius: 4px;
@@ -1080,7 +1248,7 @@ $projects = $stmt->get_result();
         }
 
         #confirmYes {
-            background: #4CAF50;
+            background: #F8CE08;
             color: white;
             border: none;
             border-radius: 4px;
@@ -1292,7 +1460,7 @@ $projects = $stmt->get_result();
         }
 
         .add-project-btn {
-            background-color: #4CAF50;
+            background-color: #F8CE08;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -1518,7 +1686,7 @@ $projects = $stmt->get_result();
         }
 
         .project-name {
-            color: #2563eb;
+            color: #EDC716;
             font-weight: 500;
         }
 
@@ -1627,28 +1795,38 @@ $projects = $stmt->get_result();
     <div id="taskModal" class="modal">
         <div class="modal-content">
             <button class="close-btn">&times;</button>
-            <h2>Create Task for: <span id="projectTitleForTask"></span></h2>
+            <h2>Add Task to: <span id="projectTitleForTask"></span></h2>
             <form id="addTaskForm">
                 <input type="hidden" name="project_id" id="taskProjectId">
 
-                <label>Task Title:</label>
-                <input type="text" name="title" required>
+                <div class="form-group">
+                    <label>Task Title</label>
+                    <input type="text" name="title" placeholder="Enter task title" required>
+                </div>
 
-                <label>Description:</label>
-                <textarea name="description" required></textarea>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" placeholder="Enter task description" required></textarea>
+                </div>
 
-                <label>Deadline:</label>
-                <input type="date" name="deadline" required>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" name="deadline" required>
+                </div>
 
-                <label>Priority:</label>
-                <select name="priority" required>
-                    <option value="Low">Low</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="High">High</option>
-                </select>
+                <div class="form-group">
+                    <label>Priority Level</label>
+                    <select name="priority" required>
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium" selected>Medium Priority</option>
+                        <option value="High">High Priority</option>
+                    </select>
+                </div>
 
-                <label>Assign Employees:</label>
-                <select id="taskEmployees" name="employees[]" multiple required class="select2"></select>
+                <div class="form-group">
+                    <label>Assign Team Members</label>
+                    <select id="taskEmployees" name="employees[]" multiple required class="select2"></select>
+                </div>
 
                 <button type="submit">Create Task</button>
             </form>
@@ -1658,7 +1836,8 @@ $projects = $stmt->get_result();
     <div id="addEmployeeModal" class="modal">
         <div class="modal-content">
             <button class="close-btn">&times;</button>
-            <h2>Add Employees to Project: <span id="projectTitleForEmployees"></span></h2>
+            <h2>Add Employees to Project: </h2>
+            <span id="projectTitleForEmployees"></span>
 
             <div class="section">
                 <h3>Recommended Employees</h3>
