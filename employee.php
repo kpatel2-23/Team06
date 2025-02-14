@@ -1334,6 +1334,7 @@ while ($row = $leader_result->fetch_assoc()) {
                     const projectId = this.getAttribute('data-project-id');
                     const projectTitle = this.getAttribute('data-project-title');
                     const modal = document.getElementById('addEmployeeModal');
+                    const submitButton = document.querySelector('#assignEmployeesForm .submit-btn'); // Select submit button
 
                     document.getElementById('employeeProjectId').value = projectId;
                     document.getElementById('projectTitleForEmployees').textContent = projectTitle;
@@ -1350,8 +1351,12 @@ while ($row = $leader_result->fetch_assoc()) {
 
                         // Check if there are no available employees
                         if (data.all_employees.length === 0) {
+                            const recommendedContainer = document.getElementById('recommendedEmployees');
+                            recommendedContainer.innerHTML = '<p>No available employees to assign.</p>';
                             const availableContainer = document.getElementById('availableEmployees');
                             availableContainer.innerHTML = '<p>No available employees to assign.</p>';
+                            submitButton.style.display = "none"; // Hide the button
+
                         } else {
                             // Display recommended employees
                             const recommendedContainer = document.getElementById('recommendedEmployees');
@@ -1374,6 +1379,8 @@ while ($row = $leader_result->fetch_assoc()) {
                             </div>
                         </div>
                     `).join('');
+
+                    submitButton.style.display = "block";
                         }
 
                         modal.classList.add('show');
