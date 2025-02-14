@@ -373,10 +373,17 @@ while ($row = $leader_result->fetch_assoc()) {
             opacity: 1;
             transition: opacity 0.5s ease-in-out;
             box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #333;
+            /* Default background */
         }
 
         .notification.success {
             background-color: #28a745;
+        }
+
+        .notification.warning {
+            background-color: #ffc107;
+            /* Yellow */
         }
 
         .notification.error {
@@ -1148,11 +1155,11 @@ while ($row = $leader_result->fetch_assoc()) {
                             modal.classList.add('show');
                         } else {
                             console.error('Invalid project data:', projectData);
-                            alert('Error loading project details');
+                            showNotification('Error loading project details');
                         }
                     } catch (error) {
                         console.error('Error:', error);
-                        alert('Error loading project details');
+                        showNotification('Error loading project details');
                     }
                 });
             });
@@ -1192,7 +1199,7 @@ while ($row = $leader_result->fetch_assoc()) {
                         modal.classList.add('show');
                     } catch (error) {
                         console.error('Error:', error);
-                        alert('Error loading employees');
+                        showNotification('Error loading employees');
                     }
                 });
             });
@@ -1220,13 +1227,13 @@ while ($row = $leader_result->fetch_assoc()) {
             //             body: new FormData(this)
             //         });
             //         const result = await response.text();
-            //         alert(result);
+            //         showNotification(result);
             //         if (result.includes('successfully')) {
             //             location.reload();
             //         }
             //     } catch (error) {
             //         console.error('Error:', error);
-            //         alert('Error creating task');
+            //         showNotification('Error creating task');
             //     }
             // });
 
@@ -1424,13 +1431,13 @@ while ($row = $leader_result->fetch_assoc()) {
                         taskItem.style.display = '';
                     }
 
-                    alert(`Task status updated to ${newStatus}`);
+                    showNotification(`Task status updated to ${newStatus}`);
                 } else {
-                    alert(result.error || 'Failed to update task status');
+                    showNotification(result.error || 'Failed to update task status');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error updating task status');
+                showNotification('Error updating task status');
             }
         }
 
@@ -1523,7 +1530,7 @@ while ($row = $leader_result->fetch_assoc()) {
                         modal.style.display = "block";
                     } catch (error) {
                         console.error("Error:", error);
-                        alert("Error loading employees");
+                        showNotification("Error loading employees");
                     }
                 });
             });
