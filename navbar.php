@@ -6,40 +6,56 @@ if (session_status() === PHP_SESSION_NONE) {
 include("db_config.php");
 
 $user_id = $_SESSION['user_id'];
-$result = $conn->query("SELECT name, role FROM users WHERE id = $user_id");
+$result = $conn->query("SELECT name, role, email FROM users WHERE id = $user_id");
 $user = $result->fetch_assoc();
 ?>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+    
     /* Navbar Styling */
     .navbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
         background-color: #333;
-        padding: 10px 20px;
+        padding: 15px 20px;
         color: white;
+        font-family: 'Poppins', sans-serif;
+        border-radius: 10px;
     }
     
-    .navbar .logo {
-        font-size: 22px;
-        font-weight: bold;
-    }
-
-    .profile {
-        position: relative;
+    .navbar .left-section {
         display: flex;
         align-items: center;
-        cursor: pointer;
+        font-size: 1.2rem;
     }
 
-    .profile img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+    .navbar .left-section img {
+        height: 60px;
         margin-right: 10px;
     }
 
+    .navbar .center-section {
+        flex-grow: 1;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin-right: 120px;
+    }
+
+    .navbar .profile {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .navbar .profile img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+
+    /* Dropdown Styling */
     .dropdown {
         display: none;
         position: absolute;
@@ -67,14 +83,80 @@ $user = $result->fetch_assoc();
     .dropdown.show {
         display: block;
     }
+
+    /* Profile Modal Styling */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        width: 400px;
+        max-width: 90%;
+        font-family: 'Poppins', sans-serif;
+        text-align: center;
+    }
+
+    .nav-modal-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .profile-info {
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .profile-info p {
+        margin: 5px 0;
+        font-size: 16px;
+    }
+
+    .input-field {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .save-btn {
+        background-color: #333;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 90%;
+    }
+
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 18px;
+        cursor: pointer;
+    }
 </style>
 
 <div class="navbar">
-    <div class="logo">Make-it-all</div>
+    <div class="left-section">
+        <img src="TP_LOGO.png" alt="Logo">
+        <span>Make-it-all</span>
+    </div>
+
+    <div class="center-section">
+        Task Management System
+    </div>
 
     <div class="profile" onclick="toggleDropdown()">
-        <img src="profile_icon.png" alt="Profile">
-        <span><?php echo htmlspecialchars($user['name']); ?></span>
+        <img src="TPPP.png" alt="Profile">
         <div class="dropdown" id="profileDropdown">
             <a href="#" onclick="openProfileModal()">⚙️ Manage Profile</a>
             <a href="logout.php">🚪 Sign Out</a>
@@ -84,14 +166,17 @@ $user = $result->fetch_assoc();
 
 <!-- Profile Modal -->
 <div id="profileModal" class="modal">
-    <div class="modal-content">
+    <div class="nav-modal-content">
         <span class="close" onclick="closeProfileModal()">&times;</span>
-        <h2>Change Password</h2>
+        <h2>Manage Profile</h2>
+        <div class="profile-info">
+            <p><strong>Name:</strong> <?php echo htmlspecialchars($user['name']); ?></p>
+            <p><strong>Role:</strong> <?php echo htmlspecialchars($user['role']); ?></p>
+            <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+        </div>
         <form id="changePasswordForm">
-            <label>New Password:</label>
-            <input type="password" name="new_password" required>
-
-            <button type="submit">Update Password</button>
+            <input type="password" class="input-field" name="new_password" placeholder="New Password" required>
+            <button type="submit" class="save-btn">Update Password</button>
         </form>
     </div>
 </div>
@@ -109,53 +194,9 @@ $user = $result->fetch_assoc();
         document.getElementById("profileModal").style.display = "none";
     }
 
-    // Close dropdown when clicking outside
     window.onclick = function(event) {
         if (!event.target.closest(".profile")) {
             document.getElementById("profileDropdown").classList.remove("show");
         }
     };
-
-    // Handle password change via AJAX
-    document.getElementById("changePasswordForm").onsubmit = function(e) {
-        e.preventDefault();
-        let formData = new FormData(this);
-
-        fetch("update_password.php", {
-            method: "POST",
-            body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            alert(result);
-            closeProfileModal();
-        });
-    };
 </script>
-
-<style>
-    /* Modal Styling */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-    }
-
-    .modal-content {
-        position: relative;
-        width: 300px;
-    }
-
-    .close {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-    }
-</style>
