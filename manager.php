@@ -913,6 +913,89 @@ $projects = $stmt->get_result();
             });
         });
 
+        document.addEventListener('DOMContentLoaded', function () {
+            const taskCards = document.querySelectorAll('.task-card');
+            taskCards.forEach(card => {
+                card.addEventListener('click', function () {
+                    showTaskModal(this);
+                });
+            });
+        });
+
+        function showTaskModal(taskCard) {
+            const modal = document.getElementById('taskDetailModal');
+
+            // Get all the necessary elements from the task card
+            const projectName = taskCard.querySelector('.project-name').textContent;
+            const taskTitle = taskCard.querySelector('.task-title').textContent;
+            const status = taskCard.querySelector('.task-status').textContent.trim();
+            const assignee = taskCard.querySelector('.task-assignee').textContent.replace('Assigned to:', '').trim();
+            const deadline = taskCard.querySelector('.task-deadline').textContent.replace('Deadline:', '').trim();
+            const description = taskCard.querySelector('.task-description').textContent;
+            const priority = taskCard.querySelector('.priority-badge').textContent.trim();
+
+            // Populate the modal with the task data
+            document.getElementById('modalTaskTitle').textContent = taskTitle;
+            document.getElementById('modalProjectName').textContent = projectName;
+            document.getElementById('modalAssignee').textContent = assignee;
+            document.getElementById('modalDeadline').textContent = deadline;
+            document.getElementById('modalDescription').textContent = description;
+            document.getElementById('modalPriority').textContent = priority;
+
+            // Set status badge
+            const statusBadge = document.getElementById('modalTaskStatus');
+            statusBadge.textContent = status;
+            statusBadge.className = 'status-badge ' + status.toLowerCase();
+
+            // Set progress indicator based on status
+            const progressIndicator = document.getElementById('progressIndicator');
+            // Normalize the status by removing spaces and converting to lowercase
+            const normalizedStatus = status.toLowerCase().replace(/\s+/g, '');
+            switch (normalizedStatus) {
+                case 'pending':
+                    progressIndicator.style.width = '0%';
+                    break;
+                case 'inprogress':
+                    progressIndicator.style.width = '50%';
+                    break;
+                case 'completed':
+                    progressIndicator.style.width = '100%';
+                    break;
+                default:
+                    console.log('Unknown status:', status);
+                    progressIndicator.style.width = '0%';
+            }
+
+            // Show the modal
+            modal.style.display = 'flex';
+
+            // Close modal when clicking outside
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    closeTaskModal();
+                }
+            });
+        }
+
+        function closeTaskModal() {
+            const modal = document.getElementById('taskDetailModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeTaskModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeTaskModal();
+            }
+        });
+
 
     </script>
 
@@ -1908,44 +1991,133 @@ $projects = $stmt->get_result();
             font-size: 0.9em;
         }
 
-        .task-assignee,
-        .task-deadline {
-            color: #64748b;
+        .task-detail-modal {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
         }
 
-        .label {
-            color: #94a3b8;
-            margin-right: 5px;
+        .task-detail-header {
+            margin-bottom: 30px;
         }
 
-        .task-description {
-            font-size: 0.9em;
-            color: #64748b;
-            margin-top: 10px;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .task-title-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
-        /* Scrollbar Styling */
-        .tasks-container::-webkit-scrollbar {
-            width: 8px;
+        .task-title-section h2 {
+            margin: 0;
+            font-size: 28px;
+            color: #2c3e50;
         }
 
-        .tasks-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
-        .tasks-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+        .status-badge.pending {
+            background: #fff3e0;
+            color: #f57c00;
         }
 
-        .tasks-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        .status-badge.in-progress {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-badge.completed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .detail-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            width: 120px;
+            font-weight: 600;
+            color: #546e7a;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+        }
+
+        .description-section {
+            margin-bottom: 30px;
+        }
+
+        .description-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .description-section p {
+            line-height: 1.6;
+            color: #37474f;
+        }
+
+        .additional-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .progress-indicator {
+            position: absolute;
+            height: 100%;
+            background: #4caf50;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            color: #757575;
+            font-size: 14px;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 
@@ -2066,6 +2238,58 @@ $projects = $stmt->get_result();
             <p>Are you sure you want to DELETE this project?</p>
             <button id="confirmYes">Yes</button>
             <button id="confirmNo">Cancel</button>
+        </div>
+    </div>
+
+    <div id="taskDetailModal" class="modal">
+        <div class="modal-content task-detail-modal">
+            <button class="close-btn" onclick="closeTaskModal()">&times;</button>
+            <div id="modalTaskContent" class="task-detail-view">
+                <div class="task-detail-header">
+                    <div class="task-title-section">
+                        <h2 id="modalTaskTitle"></h2>
+                        <span id="modalTaskStatus" class="status-badge"></span>
+                    </div>
+                </div>
+
+                <div class="task-detail-body">
+                    <div class="detail-section">
+                        <div class="detail-row">
+                            <span class="detail-label">Project:</span>
+                            <span id="modalProjectName" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Assigned to:</span>
+                            <span id="modalAssignee" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Deadline:</span>
+                            <span id="modalDeadline" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Priority:</span>
+                            <span id="modalPriority" class="detail-value"></span>
+                        </div>
+                    </div>
+
+                    <div class="description-section">
+                        <h3>Description</h3>
+                        <p id="modalDescription"></p>
+                    </div>
+
+                    <div class="additional-info">
+                        <h3>Task Progress</h3>
+                        <div class="progress-bar">
+                            <div id="progressIndicator" class="progress-indicator"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span>Not Started</span>
+                            <span>In Progress</span>
+                            <span>Completed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
