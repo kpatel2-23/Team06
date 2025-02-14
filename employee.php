@@ -99,6 +99,9 @@ while ($row = $leader_result->fetch_assoc()) {
     $result = $conn->query("SELECT name FROM users WHERE id = $user_id");
     $user = $result->fetch_assoc();
     ?>
+
+    <div id="notificationContainer"></div>
+
     <h1>Welcome, <?php echo htmlspecialchars($user['name']); ?>!</h1>
 
     <div class="projects-section">
@@ -287,6 +290,99 @@ while ($row = $leader_result->fetch_assoc()) {
 
 
     <style>
+        /* Confirmation Modal Styles */
+        #confirmModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #confirmModal .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            height: 150px;
+        }
+
+        #confirmModal p {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        #confirmModal .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #confirmModal button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        #confirmYes {
+            background-color: #F8CE08;
+            color: white;
+        }
+
+        #confirmYes:hover {
+            background-color: #e6b800;
+        }
+
+        #confirmNo {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #confirmNo:hover {
+            background-color: #d32f2f;
+        }
+
+        #notificationContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            margin-right: 30px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notification {
+            padding: 12px 20px;
+            border-radius: 5px;
+            margin-right: 0px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification.success {
+            background-color: #28a745;
+        }
+
+        .notification.error {
+            background-color: #dc3545;
+        }
+
         .no-available-employees-message {
             text-align: center;
             padding: 20px;
@@ -999,6 +1095,23 @@ while ($row = $leader_result->fetch_assoc()) {
     </style>
 
     <script>
+        // Notification system
+        function showNotification(message, type) {
+            const notificationContainer = document.getElementById("notificationContainer");
+
+            const notification = document.createElement("div");
+            notification.classList.add("notification", type);
+            notification.innerText = message;
+
+            notificationContainer.appendChild(notification);
+
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = "0";
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+
         async function fetchProjectDetails(projectId) {
             try {
                 const response = await fetch('view_project_details.php', {
@@ -1119,25 +1232,51 @@ while ($row = $leader_result->fetch_assoc()) {
 
             document.getElementById('addTaskForm').addEventListener('submit', async function (e) {
                 e.preventDefault();
+                const formData = new FormData(this);
+
                 try {
                     const response = await fetch('add_task.php', {
                         method: 'POST',
-                        body: new FormData(this)
+                        body: formData
                     });
-                    const result = await response.json();
+                    const result = await response.json(); // Ensure your PHP returns JSON
+
+                    // Close the modal immediately
+                    document.getElementById('taskModal').classList.remove('show'); // or style.display = 'none';
 
                     if (result.success) {
-                        alert(result.message);
-                        document.getElementById('taskModal').classList.remove('show'); // or style.display = 'none' depending on your modal implementation
-                        location.reload();
+                        showNotification(result.message || 'Task added successfully!', 'success');
+
+                        // Clear the form
+                        this.reset();
+
+                        // Reload after 2 seconds to show new task
+                        setTimeout(() => location.reload(), 2000);
                     } else {
-                        alert(result.error || 'Error creating task');
+                        showNotification(result.error || 'Error creating task!', 'error');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error creating task');
+                    showNotification('Error creating task!', 'error');
                 }
             });
+
+            // External Notification System Function
+            function showNotification(message, type) {
+                const notificationContainer = document.getElementById('notificationContainer');
+
+                const notification = document.createElement('div');
+                notification.classList.add('notification', type);
+                notification.innerText = message;
+
+                notificationContainer.appendChild(notification);
+
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 500); // Wait for fade-out before removing
+                }, 3000);
+            }
 
             function createPieChart(employees) {
                 const ctx = document.getElementById('pieChart').getContext('2d');
@@ -1328,92 +1467,125 @@ while ($row = $leader_result->fetch_assoc()) {
             setupFilters('.filter-btn-assigned-by-me', '#tasks-assigned-by-me');
         });
 
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.add-employee-btn').forEach(button => {
-                button.addEventListener('click', async function () {
-                    const projectId = this.getAttribute('data-project-id');
-                    const projectTitle = this.getAttribute('data-project-title');
-                    const modal = document.getElementById('addEmployeeModal');
-                    const submitButton = document.querySelector('#assignEmployeesForm .submit-btn'); // Select submit button
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".add-employee-btn").forEach(button => {
+                button.addEventListener("click", async function () {
+                    const projectId = this.getAttribute("data-project-id");
+                    const projectTitle = this.getAttribute("data-project-title");
+                    const modal = document.getElementById("addEmployeeModal");
 
-                    document.getElementById('employeeProjectId').value = projectId;
-                    document.getElementById('projectTitleForEmployees').textContent = projectTitle;
+                    document.getElementById("employeeProjectId").value = projectId;
+                    document.getElementById("projectTitleForEmployees").textContent = projectTitle;
 
                     try {
                         const response = await fetch('fetch_available_employees.php', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                             body: `project_id=${projectId}`
                         });
                         const data = await response.json();
 
-                        // Check if there are no available employees
-                        if (data.all_employees.length === 0) {
-                            const recommendedContainer = document.getElementById('recommendedEmployees');
-                            recommendedContainer.innerHTML = '<p>No available employees to assign.</p>';
-                            const availableContainer = document.getElementById('availableEmployees');
-                            availableContainer.innerHTML = '<p>No available employees to assign.</p>';
-                            submitButton.style.display = "none"; // Hide the button
+                        // Display recommended employees
+                        const recommendedContainer = document.getElementById("recommendedEmployees");
+                        recommendedContainer.innerHTML = data.recommended.map(emp => `
+                    <div class="recommended-employee-card">
+                        <strong>${emp.name}</strong>
+                        <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
+                        <div>⭐ Recommended due to low workload</div>
+                    </div>
+                `).join("");
 
-                        } else {
-                            // Display recommended employees
-                            const recommendedContainer = document.getElementById('recommendedEmployees');
-                            recommendedContainer.innerHTML = data.recommended.map(emp => `
-                        <div class="recommended-employee-card">
+                        // Display all available employees
+                        const availableContainer = document.getElementById("availableEmployees");
+                        availableContainer.innerHTML = data.all_employees.map(emp => `
+                    <div class="employee-select-card">
+                        <input type="checkbox" name="employee_ids[]" value="${emp.id}">
+                        <div>
                             <strong>${emp.name}</strong>
                             <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
-                            <div>⭐ Recommended due to low workload</div>
                         </div>
-                    `).join('');
+                    </div>
+                `).join("");
 
-                            // Display all available employees
-                            const availableContainer = document.getElementById('availableEmployees');
-                            availableContainer.innerHTML = data.all_employees.map(emp => `
-                        <div class="employee-select-card">
-                            <input type="checkbox" name="employee_ids[]" value="${emp.id}">
-                            <div>
-                                <strong>${emp.name}</strong>
-                                <div class="task-count">Total Tasks: ${emp.total_tasks}</div>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    submitButton.style.display = "block";
-                        }
-
-                        modal.classList.add('show');
+                        modal.style.display = "block";
                     } catch (error) {
-                        console.error('Error:', error);
-                        alert('Error loading employees');
+                        console.error("Error:", error);
+                        alert("Error loading employees");
                     }
                 });
             });
 
-            // Handle employee assignment form submission
-            document.getElementById('assignEmployeesForm').addEventListener('submit', async function (e) {
+            // Handle employee assignment form submission dynamically
+            document.getElementById("assignEmployeesForm").addEventListener("submit", async function (e) {
                 e.preventDefault();
-                const formData = new FormData(this);
+
+                let formData = new FormData(this);
+                const projectId = document.getElementById("employeeProjectId").value;
 
                 try {
-                    const response = await fetch('assign_employees.php', {
-                        method: 'POST',
+                    const response = await fetch("assign_employees.php", {
+                        method: "POST",
                         body: formData
                     });
                     const result = await response.json();
 
                     if (result.success) {
-                        alert('Employees assigned successfully!');
-                        location.reload();
+                        showNotification("Employees assigned successfully!", "success");
+
+                        // Hide the modal after assignment
+                        document.getElementById("addEmployeeModal").style.display = "none";
+
+                        // Update employee list dynamically without reloading
+                        updateEmployeeList(projectId);
                     } else {
-                        alert(result.error || 'Failed to assign employees');
+                        showNotification("Error assigning employees: " + result.error, "error");
                     }
                 } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error assigning employees');
+                    console.error("Error:", error);
+                    showNotification("Error assigning employees!", "error");
                 }
             });
+
+            // Close the modal when clicking (X) or outside
+            const addEmployeeModal = document.getElementById("addEmployeeModal");
+            const addEmployeeCloseBtn = addEmployeeModal.querySelector(".close-btn");
+
+            addEmployeeCloseBtn.addEventListener("click", function () {
+                addEmployeeModal.style.display = "none";
+            });
+
+            window.addEventListener("click", function (event) {
+                if (event.target === addEmployeeModal) {
+                    addEmployeeModal.style.display = "none";
+                }
+            });
+
+            // Function to update employee list dynamically
+            async function updateEmployeeList(projectId) {
+                try {
+                    const response = await fetch("fetch_project_employees.php", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `project_id=${projectId}`
+                    });
+                    const employees = await response.json();
+
+                    // Update the employee list in the "View Project" modal
+                    const employeeList = document.getElementById("employeeList");
+                    employeeList.innerHTML = employees.map(emp => `
+                <div class="employee-card">
+                    <strong>${emp.name}</strong><br>
+                    Total Tasks: ${emp.total_tasks}<br>
+                    Completed: ${emp.completed_tasks}<br>
+                    Pending: ${emp.pending_tasks}
+                </div>
+            `).join("");
+
+                    showNotification("Employee list updated!", "success");
+                } catch (error) {
+                    console.error("Error fetching updated employees:", error);
+                }
+            }
         });
 
 
