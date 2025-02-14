@@ -2,8 +2,9 @@
 session_start();
 include("db_config.php");
 
-if (!isset($_SESSION["user_id"])) {
-    die(json_encode(['error' => 'Unauthorized access']));
+if (!isset($_POST['employee_ids']) || empty($_POST['employee_ids'])) {
+    echo json_encode(['success' => false, 'error' => 'No employees selected.']);
+    exit;
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
