@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Helper function to determine where to place the dragged task
+    // Function to determine where to place the dragged task
     function getDragAfterElement(column, y) {
         const draggableElements = [...column.querySelectorAll(".task-card:not(.dragging)")];
         return draggableElements.reduce((closest, child) => {
