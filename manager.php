@@ -434,7 +434,7 @@ $projects = $stmt->get_result();
         document.addEventListener("DOMContentLoaded", function () {
             let projectIdToDelete = null;
             let deleteButton = null;
-
+ 
             // Open confirmation modal when clicking delete button
             document.querySelectorAll(".delete-btn").forEach(button => {
                 button.addEventListener("click", function () {
@@ -443,7 +443,7 @@ $projects = $stmt->get_result();
                     document.getElementById("confirmModal").style.display = "flex";
                 });
             });
-
+ 
             // Handle "Yes" button click
             document.getElementById("confirmYes").addEventListener("click", function () {
                 if (projectIdToDelete) {
@@ -456,14 +456,9 @@ $projects = $stmt->get_result();
                         .then(result => {
                             if (result === "success") {
                                 showNotification("Project deleted successfully!", "success");
-
-                                // Remove the project row from the UI
-                                if (deleteButton) {
-                                    const projectRow = deleteButton.closest("tr");
-                                    if (projectRow) {
-                                        projectRow.remove();
-                                    }
-                                }
+ 
+                                // Reload the page instantly
+                                window.location.reload();
                             } else {
                                 showNotification("Error deleting project: " + result, "error");
                             }
@@ -478,14 +473,14 @@ $projects = $stmt->get_result();
                         });
                 }
             });
-
+ 
             // Handle "No" button click
             document.getElementById("confirmNo").addEventListener("click", function () {
                 document.getElementById("confirmModal").style.display = "none";
                 projectIdToDelete = null;
                 deleteButton = null;
             });
-
+ 
             // Close modal when clicking outside
             window.addEventListener("click", function (event) {
                 if (event.target === document.getElementById("confirmModal")) {
