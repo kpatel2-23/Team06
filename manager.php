@@ -255,7 +255,7 @@ $projects = $stmt->get_result();
 
                         rows.forEach(row => {
                             let employeeName = row.cells[0].textContent.toLowerCase();
-                            if (employeeName.includes(filter)) {
+                            if (employeeName.startsWith(filter)) {
                                 row.style.display = "";
                             } else {
                                 row.style.display = "none";
@@ -1811,7 +1811,7 @@ $projects = $stmt->get_result();
         }
 
         .workload-table-container {
-            max-height: 300px;
+            max-height: 250px;
             /* Set maximum height */
             overflow-y: auto;
             /* Enable vertical scrolling */
