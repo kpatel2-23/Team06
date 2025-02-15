@@ -650,7 +650,6 @@ $projects = $stmt->get_result();
                 if (event.target.classList.contains("add-task-btn")) {
                     const projectId = event.target.getAttribute("data-project-id");
 
-                    // 🛠 **Force employee refresh when opening modal**
                     await loadProjectEmployees(projectId);
                 }
             });
@@ -733,10 +732,10 @@ $projects = $stmt->get_result();
                         method: 'POST',
                         body: formData
                     });
-                    const result = await response.json(); // Ensure your PHP returns JSON
+                    const result = await response.json();
 
                     // Close the modal immediately
-                    document.getElementById('taskModal').classList.remove('show'); // or style.display = 'none';
+                    document.getElementById('taskModal').classList.remove('show');
 
                     if (result.success) {
                         showNotification(result.message || 'Task added successfully!', 'success');
@@ -840,7 +839,6 @@ $projects = $stmt->get_result();
                 .then(result => {
                     if (result.success) {
                         showNotification("Project added successfully!", "success");
-                        // Optionally, you can reload the page or update the UI dynamically
                         setTimeout(() => location.reload(), 2000); // Reload after 2 seconds
                     } else {
                         showNotification("Error adding project: " + result.error, "error");
@@ -963,7 +961,6 @@ $projects = $stmt->get_result();
             });
         }
 
-        // Update the view button click handler in your existing script
         document.addEventListener('DOMContentLoaded', function () {
             // Find all buttons and filter for the ones with View text
             document.querySelectorAll('button').forEach(button => {
@@ -978,7 +975,7 @@ $projects = $stmt->get_result();
                         }
 
                         const projectData = await fetchProjectDetails(projectId);
-                        console.log('Project Data:', projectData); // For debugging
+                        console.log('Project Data:', projectData); // Debugging code
 
                         if (projectData) {
                             document.getElementById('projectTitle').textContent = projectData.title;
@@ -993,7 +990,7 @@ $projects = $stmt->get_result();
             });
         });
 
-        // Close modal when clicking (x) or outside
+        // Close modal if clicked x
         document.addEventListener('DOMContentLoaded', function () {
             // View button functionality (keep your existing view button code)
 
@@ -1258,7 +1255,6 @@ $projects = $stmt->get_result();
         /* Delete Task Button Styling */
         .delete-task-btn {
             background-color: #fee2e2;
-            /* Red background */
             color: white;
             border: none;
             padding: 8px 14px;
@@ -2444,8 +2440,7 @@ $projects = $stmt->get_result();
             <button class="close-btn">&times;</button>
             <h2>Project Details: <span id="projectTitle"></span></h2>
             <p class="team-leader">Team Leader: <span id="teamLeaderName"></span></p>
-
-            <!-- Rest of your modal content -->
+            
             <div class="section">
                 <h3>People Working</h3>
                 <div id="employeeList"></div>

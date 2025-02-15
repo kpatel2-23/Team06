@@ -157,7 +157,7 @@ $user = $result->fetch_assoc();
 <div class="navbar">
     <div class="left-section">
         <img src="TP_LOGO.png" alt="Logo">
-        <span>Make-it-all</span>
+        <span>Make-It-All</span>
     </div>
 
     <div class="center-section">

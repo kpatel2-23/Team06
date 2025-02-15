@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .logo {
             width: 80px;
             height: 80px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             animation: float 3s ease-in-out infinite;
         }
 
@@ -67,16 +67,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         h2 {
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 30px;
             font-size: 28px;
             font-weight: 600;
-        }
-        
-        .sub-heading {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 18px;
-            font-weight: 500;
         }
 
         .input-group {
@@ -160,7 +153,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="login-container">
         <img src="TP_LOGO.png" alt="Make IT All Logo" class="logo">
         <h2>Welcome</h2>
-        <p class="sub-heading">Make-it-all Task Management Portal</p>
         
         <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
         

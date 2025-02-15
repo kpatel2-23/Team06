@@ -1,7 +1,6 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    margin: 50px;
 }
 .login-container {
     width: 300px;
@@ -14,7 +13,6 @@ input {
 }
 button {
     padding: 10px 20px;
-    background: blue;
     color: white;
     border: none;
 }
