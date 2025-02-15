@@ -44,6 +44,9 @@ function updateAllProjectStatuses($conn, $manager_id)
     }
 }
 
+// Call the function before getting statistics
+updateAllProjectStatuses($conn, $manager_id);
+
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
     header("Location: index.php");
     exit();
@@ -51,15 +54,27 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
 
 $manager_id = $_SESSION['user_id'];
 
-// Call the function before getting statistics
-updateAllProjectStatuses($conn, $manager_id);
-
-
 // Get statistics only for this manager's projects
 $project_count = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id")->fetch_assoc()['count'];
 $employee_count = $conn->query("SELECT COUNT(*) as count FROM users WHERE role='employee'")->fetch_assoc()['count'];
 $completed_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id AND status = 'completed'")->fetch_assoc()['count'];
 $ongoing_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id AND status = 'in progress'")->fetch_assoc()['count'];
+$total_tasks = $conn->query(
+    "
+    SELECT COUNT(*) as count 
+    FROM tasks t 
+    JOIN projects p ON t.project_id = p.id 
+    WHERE p.manager_id = $manager_id"
+)->fetch_assoc()['count'];
+
+$completed_tasks = $conn->query(
+    "
+    SELECT COUNT(*) as count 
+    FROM tasks t 
+    JOIN projects p ON t.project_id = p.id 
+    WHERE p.manager_id = $manager_id 
+    AND t.status = 'completed'"
+)->fetch_assoc()['count'];
 
 // Get employees and their workload
 $workload_result = $conn->query("
@@ -150,6 +165,21 @@ $projects = $stmt->get_result();
                         <div class="stat-content">
                             <h3>Ongoing Projects</h3>
                             <p class="stat-number"><?php echo $ongoing_projects; ?></p>
+                        </div>
+                    </div>
+                    <div class="stat-card total-tasks">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <h3>Total Tasks</h3>
+                            <p class="stat-number"><?php echo $total_tasks; ?></p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card completed-tasks">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3>Completed Tasks</h3>
+                            <p class="stat-number"><?php echo $completed_tasks; ?></p>
                         </div>
                     </div>
                 </div>
@@ -434,11 +464,6 @@ $projects = $stmt->get_result();
                                         projectRow.remove();
                                     }
                                 }
-
-                                // Reload the page after a short delay to ensure changes reflect
-                                setTimeout(() => {
-                                    location.reload();
-                                }, 10); // Reload after 1 second for smooth transition
                             } else {
                                 showNotification("Error deleting project: " + result, "error");
                             }
@@ -453,7 +478,6 @@ $projects = $stmt->get_result();
                         });
                 }
             });
-
 
             // Handle "No" button click
             document.getElementById("confirmNo").addEventListener("click", function () {
@@ -1718,6 +1742,7 @@ $projects = $stmt->get_result();
             background-color: #fff3e0;
         }
 
+
         .stat-content h3 {
             margin: 0;
             font-size: 0.9em;
@@ -1896,12 +1921,12 @@ $projects = $stmt->get_result();
         }
 
         /* Status Badge Colors */
-        .status-badge.not-started {
+        .status-badge.not.started {
             background-color: #f1f5f9;
             color: #475569;
         }
 
-        .status-badge.in-progress {
+        .status-badge.in.progress {
             background-color: #e0f2fe;
             color: #0369a1;
         }
@@ -2121,9 +2146,8 @@ $projects = $stmt->get_result();
         .status-badge {
             padding: 8px 16px;
             border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
+            font-size: 0.85em;
+            font-weight: 500;
         }
 
         .status-badge.pending {
