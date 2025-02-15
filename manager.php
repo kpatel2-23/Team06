@@ -2,7 +2,8 @@
 session_start();
 include("db_config.php");
 
-function updateAllProjectStatuses($conn, $manager_id) {
+function updateAllProjectStatuses($conn, $manager_id)
+{
     // Get all projects for this manager
     $projects_query = $conn->prepare("SELECT id FROM projects WHERE manager_id = ?");
     $projects_query->bind_param("i", $manager_id);
@@ -11,7 +12,7 @@ function updateAllProjectStatuses($conn, $manager_id) {
 
     while ($project = $projects_result->fetch_assoc()) {
         $project_id = $project['id'];
-        
+
         // Check tasks status for this project
         $task_status_query = $conn->prepare("
             SELECT 
@@ -21,11 +22,11 @@ function updateAllProjectStatuses($conn, $manager_id) {
             FROM tasks 
             WHERE project_id = ?
         ");
-        
+
         $task_status_query->bind_param("i", $project_id);
         $task_status_query->execute();
         $task_counts = $task_status_query->get_result()->fetch_assoc();
-        
+
         // Determine project status
         $new_status = 'not started';
         if ($task_counts['total_tasks'] > 0) {
@@ -35,7 +36,7 @@ function updateAllProjectStatuses($conn, $manager_id) {
                 $new_status = 'in progress';
             }
         }
-        
+
         // Update project status
         $update_query = $conn->prepare("UPDATE projects SET status = ? WHERE id = ?");
         $update_query->bind_param("si", $new_status, $project_id);
@@ -43,15 +44,16 @@ function updateAllProjectStatuses($conn, $manager_id) {
     }
 }
 
-// Call the function before getting statistics
-updateAllProjectStatuses($conn, $manager_id);
-
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
     header("Location: index.php");
     exit();
 }
 
 $manager_id = $_SESSION['user_id'];
+
+// Call the function before getting statistics
+updateAllProjectStatuses($conn, $manager_id);
+
 
 // Get statistics only for this manager's projects
 $project_count = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id")->fetch_assoc()['count'];
@@ -432,6 +434,11 @@ $projects = $stmt->get_result();
                                         projectRow.remove();
                                     }
                                 }
+
+                                // Reload the page after a short delay to ensure changes reflect
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 10); // Reload after 1 second for smooth transition
                             } else {
                                 showNotification("Error deleting project: " + result, "error");
                             }
@@ -446,6 +453,7 @@ $projects = $stmt->get_result();
                         });
                 }
             });
+
 
             // Handle "No" button click
             document.getElementById("confirmNo").addEventListener("click", function () {

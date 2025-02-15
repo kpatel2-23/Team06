@@ -684,10 +684,9 @@ h3 {
 }
 
 .projects-header {
-    display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 0px;
 }
 
 .projects-table-container {
