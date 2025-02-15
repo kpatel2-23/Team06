@@ -4,7 +4,7 @@ include("db_config.php");
 
 function updateAllProjectStatuses($conn, $manager_id)
 {
-    // Get all projects for this manager
+    // Queries to get the projects
     $projects_query = $conn->prepare("SELECT id FROM projects WHERE manager_id = ?");
     $projects_query->bind_param("i", $manager_id);
     $projects_query->execute();
@@ -13,7 +13,7 @@ function updateAllProjectStatuses($conn, $manager_id)
     while ($project = $projects_result->fetch_assoc()) {
         $project_id = $project['id'];
 
-        // Check tasks status for this project
+        // Checking tasks status for those projects
         $task_status_query = $conn->prepare("
             SELECT 
                 COUNT(*) as total_tasks,
@@ -27,7 +27,7 @@ function updateAllProjectStatuses($conn, $manager_id)
         $task_status_query->execute();
         $task_counts = $task_status_query->get_result()->fetch_assoc();
 
-        // Determine project status
+        // Get project status
         $new_status = 'not started';
         if ($task_counts['total_tasks'] > 0) {
             if ($task_counts['completed_tasks'] == $task_counts['total_tasks']) {
@@ -51,10 +51,9 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
 
 $manager_id = $_SESSION['user_id'];
 
-// Call the function before getting statistics
 updateAllProjectStatuses($conn, $manager_id);
 
-// Get statistics only for this manager's projects
+// Get information for manager's project who is logged in 
 $project_count = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id")->fetch_assoc()['count'];
 $employee_count = $conn->query("SELECT COUNT(*) as count FROM users WHERE role='employee'")->fetch_assoc()['count'];
 $completed_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id AND status = 'completed'")->fetch_assoc()['count'];
@@ -76,7 +75,7 @@ $completed_tasks = $conn->query(
     AND t.status = 'completed'"
 )->fetch_assoc()['count'];
 
-// Get employees and their workload
+// Get employee workload
 $workload_result = $conn->query("
     SELECT 
         u.name,
@@ -252,7 +251,7 @@ $projects = $stmt->get_result();
                     document.addEventListener("DOMContentLoaded", function () {
                         let taskIdToDelete = null;
 
-                        // Open confirmation modal when clicking delete button
+                        // Opening confirmation pop up when clicking delete button
                         document.querySelectorAll(".delete-task-btn").forEach(button => {
                             button.addEventListener("click", function (event) {
                                 event.stopPropagation(); // Prevent card click from triggering modal
@@ -261,7 +260,7 @@ $projects = $stmt->get_result();
                             });
                         });
 
-                        // Handle "Yes" button click
+                        // "Yes" button click handler
                         document.getElementById("confirmYes").addEventListener("click", function () {
                             if (taskIdToDelete) {
                                 fetch("delete_task_manager.php", {
@@ -291,13 +290,13 @@ $projects = $stmt->get_result();
                             }
                         });
 
-                        // Handle "No" button click
+                        // "No" button click handler
                         document.getElementById("confirmNo").addEventListener("click", function () {
                             document.getElementById("confirmModal").style.display = "none";
                             taskIdToDelete = null;
                         });
 
-                        // Close modal when clicking outside
+                        // Close modal
                         window.addEventListener("click", function (event) {
                             if (event.target === document.getElementById("confirmModal")) {
                                 document.getElementById("confirmModal").style.display = "none";
@@ -306,7 +305,7 @@ $projects = $stmt->get_result();
                         });
                     });
 
-                    // Notification system
+                    // Noti pop up system
                     function showNotification(message, type) {
                         const notificationContainer = document.getElementById("notificationContainer");
 
@@ -316,7 +315,7 @@ $projects = $stmt->get_result();
 
                         notificationContainer.appendChild(notification);
 
-                        // Remove notification after 3 seconds
+                        // Remove the noti after 3 seconds
                         setTimeout(() => {
                             notification.style.opacity = "0";
                             setTimeout(() => notification.remove(), 500);
@@ -338,12 +337,12 @@ $projects = $stmt->get_result();
                     });
 
                     document.addEventListener('DOMContentLoaded', function () {
-                        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-                        document.getElementById('taskDeadline').setAttribute('min', today); // Set the min attribute
+                        const today = new Date().toISOString().split('T')[0]; // Get current date
+                        document.getElementById('taskDeadline').setAttribute('min', today);
                     });
 
                     document.addEventListener("DOMContentLoaded", function () {
-                        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+                        const today = new Date().toISOString().split('T')[0];
                         document.getElementById('projectDeadline').setAttribute('min', today); // Set the min attribute
                     });
                 </script>
@@ -357,7 +356,7 @@ $projects = $stmt->get_result();
                 </div>
                 <div class="tasks-container">
                     <?php
-                    // Fetch tasks assigned by this manager
+                    // Fetch the tasks assigned by the logged in manager
                     $assigned_tasks_query = "
                     SELECT t.*, p.title as project_name, u.name as employee_name, p.priority as project_priority
                     FROM tasks t
@@ -414,7 +413,6 @@ $projects = $stmt->get_result();
                                             <?php echo htmlspecialchars($task["priority"]); ?>
                                         </span>
                                     </div>
-                                    <!-- 🗑️ Add Delete Button Here -->
                                     <div class="task-actions">
                                         <button class="delete-task-btn" data-task-id="<?php echo $task["id"]; ?>">🗑️</button>
                                     </div>
@@ -434,7 +432,7 @@ $projects = $stmt->get_result();
         </div>
 
         <?php
-        // Query to fetch projects with team leader names
+        // Query t fetch projects with corresponding team leader names
         $projects_query = "
         SELECT p.*, u.name as leader 
         FROM projects p
@@ -471,7 +469,6 @@ $projects = $stmt->get_result();
                         </tr>
                     <?php else: ?>
                         <?php while ($row = $projects->fetch_assoc()): ?>
-                            <!-- Your existing project row code -->
                             <tr>
                                 <td>
                                     <div class="project-name"><?php echo htmlspecialchars($row["title"]); ?></div>
@@ -520,7 +517,7 @@ $projects = $stmt->get_result();
         </div>
     </div>
 
-    <!-- Modal for Adding Project -->
+    <!-- Add Project Modal -->
     <div id="projectModal" class="modal">
         <div class="modal-content">
             <button class="close" onclick="closeModal()">&times;</button>
@@ -573,7 +570,7 @@ $projects = $stmt->get_result();
             let projectIdToDelete = null;
             let deleteButton = null;
 
-            // Open confirmation modal when clicking delete button
+            // Open confirmation pop up when click delete button
             document.querySelectorAll(".delete-btn").forEach(button => {
                 button.addEventListener("click", function () {
                     projectIdToDelete = this.getAttribute("data-project-id");
@@ -582,7 +579,7 @@ $projects = $stmt->get_result();
                 });
             });
 
-            // Handle "Yes" button click
+            // "Yes" button click handler
             document.getElementById("confirmYes").addEventListener("click", function () {
                 if (projectIdToDelete) {
                     fetch("delete_project.php", {
@@ -595,7 +592,7 @@ $projects = $stmt->get_result();
                             if (result === "success") {
                                 showNotification("Project deleted successfully!", "success");
 
-                                // Reload the page instantly
+                                // Reloading the page
                                 window.location.reload();
                             } else {
                                 showNotification("Error deleting project: " + result, "error");
@@ -612,14 +609,14 @@ $projects = $stmt->get_result();
                 }
             });
 
-            // Handle "No" button click
+            // "No" button click handler
             document.getElementById("confirmNo").addEventListener("click", function () {
                 document.getElementById("confirmModal").style.display = "none";
                 projectIdToDelete = null;
                 deleteButton = null;
             });
 
-            // Close modal when clicking outside
+            // Close modal
             window.addEventListener("click", function (event) {
                 if (event.target === document.getElementById("confirmModal")) {
                     document.getElementById("confirmModal").style.display = "none";
@@ -1260,7 +1257,7 @@ $projects = $stmt->get_result();
     <style>
         /* Delete Task Button Styling */
         .delete-task-btn {
-            background-color: #ff4d4d;
+            background-color: #fee2e2;
             /* Red background */
             color: white;
             border: none;
