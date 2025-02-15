@@ -744,6 +744,11 @@ while ($row = $leader_result->fetch_assoc()) {
                 }
             });
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            document.getElementById('taskDeadline').setAttribute('min', today); // Set the min attribute
+        });
     </script>
 
 
@@ -790,7 +795,7 @@ while ($row = $leader_result->fetch_assoc()) {
 
                 <div class="form-group">
                     <label>Due Date</label>
-                    <input type="date" name="deadline" required>
+                    <input type="date" name="deadline" id="taskDeadline" required>
                 </div>
 
                 <div class="form-group">

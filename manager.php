@@ -249,6 +249,80 @@ $projects = $stmt->get_result();
                 </style>
 
                 <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        let taskIdToDelete = null;
+
+                        // Open confirmation modal when clicking delete button
+                        document.querySelectorAll(".delete-task-btn").forEach(button => {
+                            button.addEventListener("click", function (event) {
+                                event.stopPropagation(); // Prevent card click from triggering modal
+                                taskIdToDelete = this.getAttribute("data-task-id");
+                                document.getElementById("confirmModal").style.display = "flex";
+                            });
+                        });
+
+                        // Handle "Yes" button click
+                        document.getElementById("confirmYes").addEventListener("click", function () {
+                            if (taskIdToDelete) {
+                                fetch("delete_task_manager.php", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                                    body: "task_id=" + taskIdToDelete
+                                })
+                                    .then(response => response.json()) // Parse the response as JSON
+                                    .then(result => {
+                                        if (result.success) {
+                                            showNotification(result.message || "Task deleted successfully!", "success");
+                                            // Remove task card instantly
+                                            document.querySelector(`.task-card[data-task-id='${taskIdToDelete}']`).remove();
+                                            setTimeout(() => location.reload(), 1000);
+
+                                        } else {
+                                            showNotification("Error deleting task: " + result.message, "error");
+                                        }
+                                    })
+                                    .catch(error => {
+                                        showNotification("Error deleting task: " + error, "error");
+                                    })
+                                    .finally(() => {
+                                        document.getElementById("confirmModal").style.display = "none";
+                                        taskIdToDelete = null;
+                                    });
+                            }
+                        });
+
+                        // Handle "No" button click
+                        document.getElementById("confirmNo").addEventListener("click", function () {
+                            document.getElementById("confirmModal").style.display = "none";
+                            taskIdToDelete = null;
+                        });
+
+                        // Close modal when clicking outside
+                        window.addEventListener("click", function (event) {
+                            if (event.target === document.getElementById("confirmModal")) {
+                                document.getElementById("confirmModal").style.display = "none";
+                                taskIdToDelete = null;
+                            }
+                        });
+                    });
+
+                    // Notification system
+                    function showNotification(message, type) {
+                        const notificationContainer = document.getElementById("notificationContainer");
+
+                        const notification = document.createElement("div");
+                        notification.classList.add("notification", type);
+                        notification.innerText = message;
+
+                        notificationContainer.appendChild(notification);
+
+                        // Remove notification after 3 seconds
+                        setTimeout(() => {
+                            notification.style.opacity = "0";
+                            setTimeout(() => notification.remove(), 500);
+                        }, 3000);
+                    }
+
                     document.getElementById("employeeSearch").addEventListener("keyup", function () {
                         let filter = this.value.toLowerCase();
                         let rows = document.querySelectorAll(".employee-row");
@@ -261,6 +335,16 @@ $projects = $stmt->get_result();
                                 row.style.display = "none";
                             }
                         });
+                    });
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+                        document.getElementById('taskDeadline').setAttribute('min', today); // Set the min attribute
+                    });
+
+                    document.addEventListener("DOMContentLoaded", function () {
+                        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+                        document.getElementById('projectDeadline').setAttribute('min', today); // Set the min attribute
                     });
                 </script>
 
@@ -297,7 +381,7 @@ $projects = $stmt->get_result();
                             </div>
                         <?php else: ?>
                             <?php while ($task = $assigned_tasks->fetch_assoc()): ?>
-                                <div class="task-card">
+                                <div class="task-card" data-task-id="<?php echo $task["id"]; ?>">
                                     <div class="task-header">
                                         <div class="task-project">
                                             <span class="label">Project:</span>
@@ -307,7 +391,6 @@ $projects = $stmt->get_result();
                                         <span class="task-status <?php echo strtolower($task["status"]); ?>">
                                             <?php echo htmlspecialchars($task["status"]); ?>
                                         </span>
-
                                     </div>
                                     <div class="task-title">
                                         <?php echo htmlspecialchars($task["title"]); ?>
@@ -319,6 +402,8 @@ $projects = $stmt->get_result();
                                         </div>
                                         <div class="task-deadline">
                                             <span class="label">Deadline:</span>
+                                            <input type="date" name="deadline" id="taskDeadline" required
+                                                min="<?php echo date('Y-m-d'); ?>">
                                             <?php echo date('M d, Y', strtotime($task["deadline"])); ?>
                                         </div>
                                     </div>
@@ -330,6 +415,10 @@ $projects = $stmt->get_result();
                                         <span class="priority-badge <?php echo strtolower($task["priority"]); ?>">
                                             <?php echo htmlspecialchars($task["priority"]); ?>
                                         </span>
+                                    </div>
+                                    <!-- 🗑️ Add Delete Button Here -->
+                                    <div class="task-actions">
+                                        <button class="delete-task-btn" data-task-id="<?php echo $task["id"]; ?>">🗑️</button>
                                     </div>
                                 </div>
                             <?php endwhile; ?>
@@ -451,7 +540,7 @@ $projects = $stmt->get_result();
 
                 <div class="form-group">
                     <label>Deadline</label>
-                    <input type="date" name="deadline" required>
+                    <input type="date" name="deadline" id= "projectDeadline" required>
                 </div>
 
                 <div class="form-group">
@@ -1171,6 +1260,40 @@ $projects = $stmt->get_result();
     </script>
 
     <style>
+        /* Delete Task Button Styling */
+        .delete-task-btn {
+            background-color: #ff4d4d;
+            /* Red background */
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .delete-task-btn:hover {
+            background-color: #e63946;
+            /* Darker red on hover */
+            transform: scale(1.05);
+        }
+
+        .delete-task-btn:active {
+            transform: scale(0.95);
+        }
+
+        .task-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
         /* Confirmation Modal Styles */
         #confirmModal {
             display: none;
@@ -2365,7 +2488,7 @@ $projects = $stmt->get_result();
 
                 <div class="form-group">
                     <label>Due Date</label>
-                    <input type="date" name="deadline" required>
+                    <input type="date" name="deadline" id="taskDeadline" required>
                 </div>
 
                 <div class="form-group">
