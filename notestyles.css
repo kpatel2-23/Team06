@@ -1,0 +1,77 @@
+#todo {
+    display: none;
+    position: absolute;
+    z-index: 999;
+    background-color: #f1f1f1;
+    width: 300px;
+    border: 1px solid #ddd;
+    resize: both;
+    overflow: auto;
+    min-width: 250px;
+    min-height: 250px;
+    border-radius: 10px;
+}
+  
+#todoheader {
+    padding: 20px;
+    cursor: move;
+    background-color: #1990ff;
+}
+
+#todobody {
+    height: 90%;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+}
+
+#newlbl {
+    position: relative;
+    max-width: 70%;
+}
+
+#toggleButton {
+    position: fixed;
+    width: 130px;
+    height: 150px;
+    border-radius: 5%;
+    background-color: #1990ff;
+    border-color: #1990ff;
+    box-shadow: none;
+    bottom: 20px;
+    right: 20px;
+}
+
+#todoimg {
+    height: 120px;
+}
+
+#todobtn {
+    background-color: #5eb1ff;
+    border-radius: 5px;
+    border-style: none;
+    color: white;
+}
+
+#taskdiv {
+    width: 100%;
+    background-color: lightgray;
+    border-radius: 5px;
+}
+
+#delbtn {
+    position: absolute;
+    right: 10px;
+    border-style: none;
+    background-color: transparent;
+}
+
+#deletebtn {
+    position: relative;
+    width: 10px;
+    align-items: center;
+}
+
+[contenteditable] { 
+    outline: 0px solid transparent; 
+}
