@@ -20,7 +20,7 @@ $overdue_tasks_query = $conn->query("
 ");
 $overdue_tasks = $overdue_tasks_query->fetch_assoc()['count'] ?? 0;
 
-// Fetch Tasks Created by You
+// Fetch Tasks Made By User
 $tasks_created_query = $conn->query("
     SELECT COUNT(*) as count 
     FROM tasks 

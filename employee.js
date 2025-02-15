@@ -143,9 +143,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: 'POST',
                 body: formData
             });
-            const result = await response.json(); // Ensure your PHP returns JSON
+            const result = await response.json(); //PHP TO JSON
 
-            // Close the modal immediately
+            // Close the modal 
             document.getElementById('taskModal').classList.remove('show'); // or style.display = 'none';
 
             if (result.success) {

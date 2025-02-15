@@ -213,7 +213,7 @@
     color: #4b5563;
 }
 
-/* Make task items more compact on smaller screens */
+/*task items more compact on smaller screens */
 @media (max-width: 768px) {
     .task-info-wrapper {
         flex-direction: column;
@@ -756,7 +756,7 @@ h3 {
 
 .priority-badge.high {
     background-color: #fee2e2;
-    color: #b91c1c;
+    color: #b72525;
 }
 
 .action-buttons {
@@ -776,7 +776,7 @@ h3 {
 
 .action-btn.view-btn {
     background-color: #e0f2fe;
-    color: #0369a1;
+    color: #12628d;
 }
 
 .action-btn.edit-btn {
@@ -786,7 +786,7 @@ h3 {
 
 .action-btn.add-task-btn {
     background-color: #dcfce7;
-    color: #166534;
+    color: #1c7a40;
 }
 
 .action-btn.add-employee-btn {

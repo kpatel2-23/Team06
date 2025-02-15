@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $priority = $_POST["priority"];
         $employees = isset($_POST["employees"]) ? $_POST["employees"] : [];
 
-        // Ensure required fields are not empty
+        // Ensure require fields are not empty
         if (empty($title) || empty($description) || empty($project_id) || empty($deadline) || empty($priority)) {
             die(json_encode(['success' => false, 'message' => 'All fields are required.']));
         }
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $assign_stmt->close();
             }
 
-            // Commit transaction
+            // Commit transactio
             $conn->commit();
             
             echo json_encode([
@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
 
     } catch (Exception $e) {
-        // Rollback transaction on error
+        // Rollback on error
         $conn->rollback();
         echo json_encode([
             'success' => false, 

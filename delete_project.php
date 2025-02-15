@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit();
     }
 
-    // Begin transaction to ensure data integrity
+    // Begin transaction 
     $conn->begin_transaction();
 
     try {
