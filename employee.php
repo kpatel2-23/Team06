@@ -141,6 +141,107 @@ while ($row = $leader_result->fetch_assoc()) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <style>
+        /* Delete Task Button Styling */
+        .delete-task-btn {
+            background-color: #ff4d4d;
+            /* Red background */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .delete-task-btn:hover {
+            background-color: #e63946;
+            /* Darker red on hover */
+            transform: scale(1.05);
+        }
+
+        .delete-task-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Ensure consistency with other buttons */
+        .task-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Confirmation Modal Styling */
+        #confirmModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.6);
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #confirmModal .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            max-width: 350px;
+            width: 90%;
+        }
+
+        #confirmModal p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Buttons inside the confirmation modal */
+        .modal-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        #confirmYes {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #confirmYes:hover {
+            background-color: #e63946;
+        }
+
+        #confirmNo {
+            background-color: #ccc;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #confirmNo:hover {
+            background-color: #bbb;
+        }
+
         .outer-container {
             background-color: #f5f7fa;
             border-radius: 10px;
@@ -530,6 +631,17 @@ while ($row = $leader_result->fetch_assoc()) {
             <?php endif; ?>
         </div>
 
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <p>Are you sure you want to delete this task?</p>
+                <div class="modal-buttons">
+                    <button id="confirmYes">Yes</button>
+                    <button id="confirmNo">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Right: Tasks Assigned by Me -->
         <div class="task-section">
             <h3>Tasks I Have Assigned</h3>
@@ -566,6 +678,7 @@ while ($row = $leader_result->fetch_assoc()) {
                                         <?php elseif ($task["status"] == "In Progress"): ?>
                                             <button class="complete-btn" data-task-id="<?php echo $task["id"]; ?>">Complete</button>
                                         <?php endif; ?>
+                                        <button class="delete-task-btn" data-task-id="<?php echo $task["id"]; ?>">🗑️</button>
                                     </div>
                                 </div>
                             </div>
@@ -580,6 +693,58 @@ while ($row = $leader_result->fetch_assoc()) {
         </div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let taskIdToDelete = null;
+
+            // Open confirmation modal when clicking delete button
+            document.querySelectorAll(".delete-task-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    taskIdToDelete = this.getAttribute("data-task-id");
+                    document.getElementById("confirmModal").style.display = "flex";
+                });
+            });
+
+            // Handle "Yes" button click in modal
+            document.getElementById("confirmYes").addEventListener("click", function () {
+                if (taskIdToDelete) {
+                    fetch("delete_task.php", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: "task_id=" + taskIdToDelete
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showNotification("Task deleted successfully!");
+                                document.querySelector(`[data-task-id='${taskIdToDelete}']`).closest("li").remove();
+                            } else {
+                                showNotification("Error: " + data.message);
+                            }
+                        })
+                        .catch(error => console.error("Error:", error))
+                        .finally(() => {
+                            document.getElementById("confirmModal").style.display = "none";
+                            taskIdToDelete = null;
+                        });
+                }
+            });
+
+            // Handle "No" button click
+            document.getElementById("confirmNo").addEventListener("click", function () {
+                document.getElementById("confirmModal").style.display = "none";
+                taskIdToDelete = null;
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener("click", function (event) {
+                if (event.target === document.getElementById("confirmModal")) {
+                    document.getElementById("confirmModal").style.display = "none";
+                    taskIdToDelete = null;
+                }
+            });
+        });
+    </script>
 
 
     <!-- View Project Modal -->
