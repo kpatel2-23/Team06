@@ -402,8 +402,6 @@ $projects = $stmt->get_result();
                                         </div>
                                         <div class="task-deadline">
                                             <span class="label">Deadline:</span>
-                                            <input type="date" name="deadline" id="taskDeadline" required
-                                                min="<?php echo date('Y-m-d'); ?>">
                                             <?php echo date('M d, Y', strtotime($task["deadline"])); ?>
                                         </div>
                                     </div>
