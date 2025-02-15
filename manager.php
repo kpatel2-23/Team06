@@ -44,15 +44,15 @@ function updateAllProjectStatuses($conn, $manager_id)
     }
 }
 
-// Call the function before getting statistics
-updateAllProjectStatuses($conn, $manager_id);
-
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
     header("Location: index.php");
     exit();
 }
 
 $manager_id = $_SESSION['user_id'];
+
+// Call the function before getting statistics
+updateAllProjectStatuses($conn, $manager_id);
 
 // Get statistics only for this manager's projects
 $project_count = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id")->fetch_assoc()['count'];
@@ -188,31 +188,82 @@ $projects = $stmt->get_result();
             <!-- Right Side -->
             <div class="dashboard-right">
                 <div class="workload-section">
-                    <h2>Employee Workload Overview</h2>
+                    <div class="workload-header">
+                        <h2>Employee Workload Overview</h2>
+                        <input type="text" id="employeeSearch" class="search-bar" placeholder="Search employees...">
+                    </div>
                     <div class="workload-table-container">
                         <table class="workload-table">
-                            <tr>
-                                <th>Employee</th>
-                                <th>Assigned Tasks</th>
-                                <th>Completed</th>
-                                <th>Remaining</th>
-                            </tr>
-                            <?php while ($row = $workload_result->fetch_assoc()): ?>
+                            <thead>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($row["name"]); ?></td>
-                                    <td><span class="badge"><?php echo htmlspecialchars($row["assigned_tasks"]); ?></span>
-                                    </td>
-                                    <td><span
-                                            class="badge success"><?php echo htmlspecialchars($row["completed_tasks"]); ?></span>
-                                    </td>
-                                    <td><span
-                                            class="badge warning"><?php echo htmlspecialchars($row["assigned_tasks"] - $row["completed_tasks"]); ?></span>
-                                    </td>
+                                    <th>Employee</th>
+                                    <th>Assigned Tasks</th>
+                                    <th>Completed</th>
+                                    <th>Remaining</th>
                                 </tr>
-                            <?php endwhile; ?>
+                            </thead>
+                            <tbody id="employeeTableBody">
+                                <?php while ($row = $workload_result->fetch_assoc()): ?>
+                                    <tr class="employee-row">
+                                        <td><?php echo htmlspecialchars($row["name"]); ?></td>
+                                        <td><span
+                                                class="badge"><?php echo htmlspecialchars($row["assigned_tasks"]); ?></span>
+                                        </td>
+                                        <td><span
+                                                class="badge success"><?php echo htmlspecialchars($row["completed_tasks"]); ?></span>
+                                        </td>
+                                        <td><span
+                                                class="badge warning"><?php echo htmlspecialchars($row["assigned_tasks"] - $row["completed_tasks"]); ?></span>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
                         </table>
                     </div>
                 </div>
+
+                <style>
+                    .workload-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+
+                    .search-bar {
+                        padding: 5px;
+                        border: 1px solid #ccc;
+                        border-radius: 3px;
+                        font-size: 12px;
+                        width: 150px;
+                    }
+
+                    #employeeSearch {
+                        width: 250px !important;
+                        padding: 12px !important;
+                        border: 1px solid #ccc !important;
+                        border-radius: 3px !important;
+                        font-size: 12px !important;
+                        transition: none !important;
+                        margin-bottom: 0 !important;
+                    }
+                </style>
+
+                <script>
+                    document.getElementById("employeeSearch").addEventListener("keyup", function () {
+                        let filter = this.value.toLowerCase();
+                        let rows = document.querySelectorAll(".employee-row");
+
+                        rows.forEach(row => {
+                            let employeeName = row.cells[0].textContent.toLowerCase();
+                            if (employeeName.includes(filter)) {
+                                row.style.display = "";
+                            } else {
+                                row.style.display = "none";
+                            }
+                        });
+                    });
+                </script>
+
             </div>
         </div>
         <div class="dashboard-bottom">
@@ -434,7 +485,7 @@ $projects = $stmt->get_result();
         document.addEventListener("DOMContentLoaded", function () {
             let projectIdToDelete = null;
             let deleteButton = null;
- 
+
             // Open confirmation modal when clicking delete button
             document.querySelectorAll(".delete-btn").forEach(button => {
                 button.addEventListener("click", function () {
@@ -443,7 +494,7 @@ $projects = $stmt->get_result();
                     document.getElementById("confirmModal").style.display = "flex";
                 });
             });
- 
+
             // Handle "Yes" button click
             document.getElementById("confirmYes").addEventListener("click", function () {
                 if (projectIdToDelete) {
@@ -456,7 +507,7 @@ $projects = $stmt->get_result();
                         .then(result => {
                             if (result === "success") {
                                 showNotification("Project deleted successfully!", "success");
- 
+
                                 // Reload the page instantly
                                 window.location.reload();
                             } else {
@@ -473,14 +524,14 @@ $projects = $stmt->get_result();
                         });
                 }
             });
- 
+
             // Handle "No" button click
             document.getElementById("confirmNo").addEventListener("click", function () {
                 document.getElementById("confirmModal").style.display = "none";
                 projectIdToDelete = null;
                 deleteButton = null;
             });
- 
+
             // Close modal when clicking outside
             window.addEventListener("click", function (event) {
                 if (event.target === document.getElementById("confirmModal")) {
