@@ -2,12 +2,25 @@
 session_start();
 include("db_config.php");
 
-if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
+if (!isset($_SESSION["user_id"])) {
     header("Location: index.php");
     exit();
 }
 
 $project_id = $_POST['project_id'];
+
+// Check if the user is either the manager or the team leader of this project
+$auth_check = $conn->prepare("
+    SELECT 1 FROM projects 
+    WHERE id = ? 
+    AND (manager_id = ? OR team_leader_id = ?)
+");
+$auth_check->bind_param("iii", $project_id, $_SESSION["user_id"], $_SESSION["user_id"]);
+$auth_check->execute();
+if ($auth_check->get_result()->num_rows === 0) {
+    header("Location: index.php");
+    exit();
+}
 
 // Fetch project details
 $project_query = $conn->prepare("SELECT * FROM projects WHERE id = ?");
