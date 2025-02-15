@@ -2,6 +2,50 @@
 session_start();
 include("db_config.php");
 
+function updateAllProjectStatuses($conn, $manager_id) {
+    // Get all projects for this manager
+    $projects_query = $conn->prepare("SELECT id FROM projects WHERE manager_id = ?");
+    $projects_query->bind_param("i", $manager_id);
+    $projects_query->execute();
+    $projects_result = $projects_query->get_result();
+
+    while ($project = $projects_result->fetch_assoc()) {
+        $project_id = $project['id'];
+        
+        // Check tasks status for this project
+        $task_status_query = $conn->prepare("
+            SELECT 
+                COUNT(*) as total_tasks,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
+                SUM(CASE WHEN status = 'in progress' THEN 1 ELSE 0 END) as in_progress_tasks
+            FROM tasks 
+            WHERE project_id = ?
+        ");
+        
+        $task_status_query->bind_param("i", $project_id);
+        $task_status_query->execute();
+        $task_counts = $task_status_query->get_result()->fetch_assoc();
+        
+        // Determine project status
+        $new_status = 'not started';
+        if ($task_counts['total_tasks'] > 0) {
+            if ($task_counts['completed_tasks'] == $task_counts['total_tasks']) {
+                $new_status = 'completed';
+            } elseif ($task_counts['in_progress_tasks'] > 0) {
+                $new_status = 'in progress';
+            }
+        }
+        
+        // Update project status
+        $update_query = $conn->prepare("UPDATE projects SET status = ? WHERE id = ?");
+        $update_query->bind_param("si", $new_status, $project_id);
+        $update_query->execute();
+    }
+}
+
+// Call the function before getting statistics
+updateAllProjectStatuses($conn, $manager_id);
+
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
     header("Location: index.php");
     exit();
@@ -12,18 +56,19 @@ $manager_id = $_SESSION['user_id'];
 // Get statistics only for this manager's projects
 $project_count = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id")->fetch_assoc()['count'];
 $employee_count = $conn->query("SELECT COUNT(*) as count FROM users WHERE role='employee'")->fetch_assoc()['count'];
-$completed_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id AND status='Completed'")->fetch_assoc()['count'];
-$ongoing_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id AND status='In Progress'")->fetch_assoc()['count'];
+$completed_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id AND status = 'completed'")->fetch_assoc()['count'];
+$ongoing_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE manager_id = $manager_id AND status = 'in progress'")->fetch_assoc()['count'];
 
 // Get employees and their workload
 $workload_result = $conn->query("
-    SELECT u.id, u.name, 
-    COUNT(pa.project_id) as assigned_tasks, 
-    SUM(CASE WHEN p.status='Completed' THEN 1 ELSE 0 END) as completed_tasks 
-    FROM users u 
-    LEFT JOIN project_assignments pa ON u.id = pa.employee_id 
-    LEFT JOIN projects p ON pa.project_id = p.id 
-    WHERE u.role='employee'
+    SELECT 
+        u.name,
+        COUNT(ta.task_id) as assigned_tasks,
+        COUNT(CASE WHEN t.status = 'completed' THEN 1 END) as completed_tasks
+    FROM users u
+    LEFT JOIN task_assignments ta ON u.id = ta.employee_id
+    LEFT JOIN tasks t ON ta.task_id = t.id
+    WHERE u.role = 'employee'
     GROUP BY u.id, u.name
 ");
 
@@ -49,6 +94,7 @@ $projects = $stmt->get_result();
     <title>Manager Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="kanban.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 </head>
 
