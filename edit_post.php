@@ -7,9 +7,12 @@ if ($post_id <= 0) {
     die("Invalid Post");
 }
 
-// Fetch post details
-$query = "SELECT * FROM posts WHERE id = $post_id";
-$result = $conn->query($query);
+// Fetch post details using prepared statement
+$query = "SELECT * FROM posts WHERE id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $post_id);
+$stmt->execute();
+$result = $stmt->get_result();
 $post = $result->fetch_assoc();
 if (!$post) {
     die("Post not found");
@@ -27,7 +30,6 @@ if (!$post) {
     <link rel="stylesheet" href="topics_style.css">
 </head>
 <body>
-
     
     <header>
         <h1>Edit Post</h1>
@@ -36,6 +38,7 @@ if (!$post) {
     <section>
         <form action="posts_functions.php" method="post" enctype="multipart/form-data">
             <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
+            
             <label for="title">Title:</label>
             <input type="text" id="title" name="title" value="<?php echo htmlspecialchars($post['title']); ?>" required>
             
@@ -45,6 +48,10 @@ if (!$post) {
             <!-- File Upload -->
             <label for="attachment">Change Attachment (Optional):</label>
             <input type="file" id="attachment" name="attachment">
+            
+            <?php if (!empty($post['attachment'])): ?>
+                <p>Current attachment: <?php echo htmlspecialchars($post['attachment']); ?></p>
+            <?php endif; ?>
             
             <button type="submit" name="edit_post">Save Changes</button>
         </form>
