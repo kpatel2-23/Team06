@@ -1,10 +1,8 @@
 <?php
-
-
 require 'db_config.php';
 
 session_start();
-$_SESSION['user_id'] = 1;  // Simulate a logged-in user with ID 1
+
 
 $topic_id = isset($_GET['topic_id']) ? intval($_GET['topic_id']) : 0;
 if ($topic_id <= 0) {
@@ -12,7 +10,10 @@ if ($topic_id <= 0) {
 }
 
 // Fetch topic details
-$query = "SELECT * FROM topics WHERE id = ?";
+$query = "SELECT t.*, u.name as username 
+          FROM topics t
+          LEFT JOIN users u ON t.user_id = u.id 
+          WHERE t.id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $topic_id);
 $stmt->execute();
@@ -29,9 +30,11 @@ if (isset($_GET['sort']) && $_GET['sort'] == 'upvotes') {
 }
 
 // Fetch posts under this topic with usernames
-$posts_query = "SELECT posts.*, users.username FROM posts 
-                JOIN users ON posts.user_id = users.id 
-                WHERE topic_id = ? ORDER BY $sort_order";
+$posts_query = "SELECT p.*, u.name as username 
+                FROM posts p
+                LEFT JOIN users u ON p.user_id = u.id 
+                WHERE p.topic_id = ? 
+                ORDER BY $sort_order";
 $stmt = $conn->prepare($posts_query);
 $stmt->bind_param("i", $topic_id);
 $stmt->execute();
@@ -66,9 +69,6 @@ $posts = $posts_result->fetch_all(MYSQLI_ASSOC);
             <label for="content">Content:</label>
             <textarea id="content" name="content" required></textarea>
 
-            <label for="attachment">Attach a File:</label>
-            <input type="file" id="attachment" name="attachment">
-
             <button type="submit" name="create_post">Create Post</button>
         </form>
     </section>
@@ -86,19 +86,22 @@ $posts = $posts_result->fetch_all(MYSQLI_ASSOC);
         </form>
 
         <ul>
-            <?php foreach ($posts as $post): ?>
-                <li>
-                    <a href="post.php?post_id=<?php echo $post['id']; ?>">
-                        <strong><?php echo htmlspecialchars($post['title']); ?></strong>
-                    </a>
-                    <br>
-                    <?php echo htmlspecialchars(substr($post['content'], 0, 100)); ?>...
-                    <br>
-                    <span>By: <?php echo htmlspecialchars($post['username']); ?></span> |
-                    <span>Upvotes: <?php echo $post['upvotes']; ?></span>
-                    <a href="upvote.php?post_id=<?php echo $post['id']; ?>">⬆ Upvote</a>
-                </li>
-            <?php endforeach; ?>
+            <?php if (empty($posts)): ?>
+                <li>No posts yet in this topic.</li>
+            <?php else: ?>
+                <?php foreach ($posts as $post): ?>
+                    <li>
+                        <a href="post.php?post_id=<?php echo $post['id']; ?>">
+                            <strong><?php echo htmlspecialchars($post['title']); ?></strong>
+                        </a>
+                        <br>
+                        <?php echo htmlspecialchars(substr($post['content'], 0, 100)); ?>...
+                        <br>
+                        <span>By: <?php echo htmlspecialchars($post['username'] ?? 'Unknown User'); ?></span> |
+                        <span>Upvotes: <?php echo $post['upvotes']; ?></span>
+                    </li>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </ul>
     </section>
 </body>
