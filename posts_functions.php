@@ -36,28 +36,35 @@ if (isset($_POST['edit_post'])) {
     $title = mysqli_real_escape_string($conn, $_POST['title']);
     $content = mysqli_real_escape_string($conn, $_POST['content']);
 
-    // Ensure the post belongs to the logged-in user
-    $check_query = "SELECT user_id FROM posts WHERE id = ?";
-    $stmt = $conn->prepare($check_query);
-    $stmt->bind_param("i", $post_id);
-    $stmt->execute();
-    $stmt->store_result();
-    $stmt->bind_result($owner_id);
-    $stmt->fetch();
-
-    if ($owner_id !== $user_id) {
-        die("Error: You can only edit your own posts.");
+    // Handle file upload if a new file is provided
+    $attachment = null;
+    if (isset($_FILES['attachment']) && $_FILES['attachment']['size'] > 0) {
+        $target_dir = "uploads/";
+        $file_extension = strtolower(pathinfo($_FILES["attachment"]["name"], PATHINFO_EXTENSION));
+        $new_filename = uniqid() . '.' . $file_extension;
+        $target_file = $target_dir . $new_filename;
+        
+        if (move_uploaded_file($_FILES["attachment"]["tmp_name"], $target_file)) {
+            $attachment = $new_filename;
+        }
     }
 
-    $update_query = "UPDATE posts SET title = ?, content = ?, updated_at = NOW() WHERE id = ?";
-    $stmt = $conn->prepare($update_query);
-    $stmt->bind_param("ssi", $title, $content, $post_id);
+    // Update query with or without attachment
+    if ($attachment) {
+        $update_query = "UPDATE posts SET title = ?, content = ?, attachment = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $conn->prepare($update_query);
+        $stmt->bind_param("sssi", $title, $content, $attachment, $post_id);
+    } else {
+        $update_query = "UPDATE posts SET title = ?, content = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $conn->prepare($update_query);
+        $stmt->bind_param("ssi", $title, $content, $post_id);
+    }
 
     if ($stmt->execute()) {
         header("Location: post.php?post_id=$post_id&success=Post updated successfully");
         exit();
     } else {
-        echo "Error: " . $conn->error;
+        die("Error: " . $conn->error);
     }
 }
 
@@ -65,28 +72,30 @@ if (isset($_POST['edit_post'])) {
 if (isset($_POST['delete_post'])) {
     $post_id = intval($_POST['post_id']);
 
-    // Ensure the post belongs to the logged-in user
-    $check_query = "SELECT user_id FROM posts WHERE id = ?";
-    $stmt = $conn->prepare($check_query);
+    // Get the topic_id before deleting the post (so we can redirect back to topic page)
+    $topic_query = "SELECT topic_id FROM posts WHERE id = ?";
+    $stmt = $conn->prepare($topic_query);
     $stmt->bind_param("i", $post_id);
     $stmt->execute();
-    $stmt->store_result();
-    $stmt->bind_result($owner_id);
-    $stmt->fetch();
-
-    if ($owner_id !== $user_id) {
-        die("Error: You can only delete your own posts.");
+    $result = $stmt->get_result();
+    $post = $result->fetch_assoc();
+    
+    if (!$post) {
+        die("Post not found");
     }
+    
+    $topic_id = $post['topic_id'];
 
+    // Delete the post
     $delete_query = "DELETE FROM posts WHERE id = ?";
     $stmt = $conn->prepare($delete_query);
     $stmt->bind_param("i", $post_id);
 
     if ($stmt->execute()) {
-        header("Location: topics.php?success=Post deleted successfully");
+        header("Location: topic.php?topic_id=$topic_id&success=Post deleted successfully");
         exit();
     } else {
-        echo "Error: " . $conn->error;
+        die("Error: " . $conn->error);
     }
 }
 
