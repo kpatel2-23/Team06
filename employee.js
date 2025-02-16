@@ -285,6 +285,11 @@ document.addEventListener('click', function (e) {
         const newStatus = e.target.classList.contains('start-btn') ? 'In Progress' : 'Completed';
 
         updateTaskStatus(taskId, newStatus, e.target);
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000); // 1 second delay
+        
+        
     }
 });
 
@@ -305,6 +310,7 @@ async function updateTaskStatus(taskId, newStatus, button) {
             const taskItem = button.closest('.task-item');
             const statusSpan = taskItem.querySelector('.task-status');
             statusSpan.textContent = `(${newStatus})`;
+            
 
             // Update data-status attribute
             taskItem.setAttribute('data-status', newStatus);
@@ -504,4 +510,3 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 });
-
