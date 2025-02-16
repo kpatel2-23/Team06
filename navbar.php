@@ -168,6 +168,7 @@ $user = $result->fetch_assoc();
         <img src="TPPP.png" alt="Profile">
         <div class="dropdown" id="profileDropdown">
             <a href="#" onclick="openProfileModal()">⚙️ Manage Profile</a>
+            <a href="topics.php">📚 Go to Knowledge</a>
             <a href="logout.php">🚪 Sign Out</a>
         </div>
     </div>

@@ -1,70 +1,133 @@
+/* General Styling */
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: #f5f7fa;
+    color: #2c3e50;
 }
 
+.container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Navbar */
 nav {
     background: #333;
-    padding: 10px;
+    padding: 15px;
     text-align: center;
 }
 
 nav a {
     color: white;
     text-decoration: none;
-    padding: 10px;
+    padding: 10px 15px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    background: #444;
+    border-radius: 5px;
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
-    text-align: center;
+    font-size: 26px;
     color: #333;
 }
 
+/* Sections */
 section {
     background: white;
     padding: 20px;
     margin: 20px auto;
-    width: 50%;
-    border-radius: 5px;
+    width: 60%;
+    border-radius: 10px;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.1);
 }
 
-input, textarea, select {
-    display: block;
+/* Forms */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input,
+textarea,
+select {
     width: 100%;
-    margin-bottom: 10px;
-    padding: 8px;
+    padding: 10px;
+    margin: 8px 0;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease-in-out;
 }
 
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #F8CE08;
+    box-shadow: 0 0 3px rgba(248, 206, 8, 0.5);
+    outline: none;
+}
+
+/* Buttons */
 button {
-    background: #28a745;
+    background: #F8CE08;
     color: white;
-    padding: 10px;
+    padding: 12px;
     border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
+    transition: all 0.3s ease-in-out;
 }
 
 button:hover {
-    background: #218838;
+    background: #d4af37;
+    transform: scale(1.05);
 }
 
-/* Topic Details Section */
-.topic-details {
-    border: 2px solid #ddd;  /* Adds a border around the topic */
-    padding: 15px;
-    margin-bottom: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+/* Topic List */
+#topicsList {
+    list-style: none;
+    padding: 0;
 }
 
-/* Style for Post Creation Section */
-section {
-    border: 2px solid #ddd;
+#topicsList li {
+    background: #ffffff;
     padding: 15px;
-    margin-bottom: 20px;
-    background-color: #ffffff;
+    margin-bottom: 10px;
     border-radius: 8px;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+}
+
+#topicsList li:hover {
+    background: #f8f9fa;
+    transform: translateY(-3px);
+}
+
+#topicsList a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #EDC716;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    section {
+        width: 90%;
+    }
 }

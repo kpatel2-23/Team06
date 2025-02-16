@@ -37,6 +37,8 @@ if (!$result) {
 $topics = $result->fetch_all(MYSQLI_ASSOC);
 ?>
 
+<?php include("navbar.php"); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,9 +48,6 @@ $topics = $result->fetch_all(MYSQLI_ASSOC);
     <script src="topics.js" defer></script>
 </head>
 <body>
-    <nav>
-        <a href="dashboard.php">Back to Dashboard</a>
-    </nav>
 
     <header>
         <h1>Knowledge Management System - Topics & Categories</h1>
