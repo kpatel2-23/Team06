@@ -6,43 +6,52 @@ const _PASS = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[_!"£$%^&*-])[a-zA-Z0-9_
 
 include("db_config.php");
 
+$errors = ['name' => '', 'email' => '', 'password' => '', 'mgrpass' => ''];
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
     $name = trim($_POST['name']);
+    $mgrpass = trim($_POST['mgrpass']);
 
-    if ($password == '' || $email == '' || $name == '') {
-        echo '<script type="text/javascript"> alert("Please fill out all fields."); window.location="register.php"; </script>';
-        exit;
+    if ($name == '') {
+        $errors['name'] = "Please enter your full name.";
     }
 
-    if (!preg_match(_EMAIL, $email)) {
-        echo '<script type="text/javascript"> alert("Please ensure you are using a valid company email when registering."); window.location="register.php"; </script>';
-        exit;
+    if ($email == '') {
+        $errors['email'] = "Please enter your company email.";
+    } elseif (!preg_match(_EMAIL, $email)) {
+        $errors['email'] = "Invalid company email format. Must be '@make-it-all.co.uk'.";
     }
 
-    if (!preg_match(_PASS, $password)) {
-        echo '<script type="text/javascript"> alert("Please ensure your password meets the following requirements:\nbetween 8 and 32 characters,\ncontains at least one lowercase character,\ncontains at least one uppercase character,\ncontains at least one number,\nand contains at least one symbol ( _!\"£$%^&* )"); window.location="register.php"; </script>';
-        exit;
+    if ($password == '') {
+        $errors['password'] = "Please enter a password.";
+    } elseif (!preg_match(_PASS, $password)) {
+        $errors['password'] = "Password must be 8-32 characters, include uppercase, lowercase, a number, and a symbol.";
     }
 
     $sql = "SELECT `email` FROM `users` WHERE `email`='$email'";
     $result = mysqli_query($conn, $sql);
 
-    if ($result->num_rows == 1) {
-        echo '<script type="text/javascript"> alert("There is already an account associated with this email. Try logging in instead."); window.location="register.php"; </script>';
+    if ($result && $result->num_rows > 0) {
+        $errors['email'] = "An account with this email already exists.";
     }
 
-    $enc_password = md5($_POST['password']);
-    $permissions = trim($_POST['mgrpass']) == "1234" ? 'manager' : 'employee';
+    if (array_filter($errors)) {
+        // If there are errors, they will be displayed on the form.
+    } else {
+        $enc_password = md5($password);
+        $permissions = $mgrpass == "1234" ? 'manager' : 'employee';
 
-    $sql = "INSERT INTO users (name, email, password, role)
-            VALUES ('$name', '$email', '$enc_password', '$permissions');";
-    $result = $conn->query($sql);
-    //ERROR TRAPPING HERE
-    echo '<script type="text/javascript">window.location = index.php;</script>'; //this fucking sucks
+        $sql = "INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$enc_password', '$permissions');";
+        $conn->query($sql);
+
+        header("Location: index.php");
+        exit;
+    }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -64,6 +73,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+            display: block;
         }
 
         .login-container {
@@ -192,15 +208,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <form method="POST">
             <div class="input-group">
-                <input type="text" name="name" placeholder="Full Name" required>
+                <input type="text" name="name" placeholder="Full Name"
+                    value="<?php echo htmlspecialchars($name ?? ''); ?>" required>
+                <small class="error"><?php echo $errors['name'] ?? ''; ?></small>
             </div>
 
             <div class="input-group">
-                <input type="email" name="email" placeholder="Company Email" required>
+                <input type="email" name="email" placeholder="Company Email"
+                    value="<?php echo htmlspecialchars($email ?? ''); ?>" required>
+                <small class="error"><?php echo $errors['email'] ?? ''; ?></small>
             </div>
 
             <div class="input-group">
                 <input type="password" name="password" placeholder="Password" required>
+                <small class="error"><?php echo $errors['password'] ?? ''; ?></small>
             </div>
 
             <div class="checkbox-group">
@@ -211,10 +232,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="input-group">
                 <input type="password" id="mgrpass" name="mgrpass" placeholder="Manager Password"
                     style="display: none;">
+                <small class="error"><?php echo $errors['mgrpass'] ?? ''; ?></small>
             </div>
 
             <button type="submit">Register</button>
         </form>
+
 
         <a href="index.php" class="login-link">Already have an account? Log in</a>
     </div>
