@@ -93,22 +93,44 @@ if (isset($_POST['delete_post'])) {
 // Upvote a post
 if (isset($_GET['post_id']) && isset($_GET['upvote'])) {
     $post_id = intval($_GET['post_id']);
+    $user_id = $_SESSION['user_id'];
 
-    // Prevent multiple upvotes by checking session
-    if (!isset($_SESSION['upvoted_posts'][$post_id])) {
-        $upvote_query = "UPDATE posts SET upvotes = upvotes + 1 WHERE id = ?";
-        $stmt = $conn->prepare($upvote_query);
-        $stmt->bind_param("i", $post_id);
+    // Start transaction
+    $conn->begin_transaction();
 
-        if ($stmt->execute()) {
+    try {
+        // Check if user has already upvoted
+        $check_query = "SELECT 1 FROM post_upvotes WHERE post_id = ? AND user_id = ?";
+        $stmt = $conn->prepare($check_query);
+        $stmt->bind_param("ii", $post_id, $user_id);
+        $stmt->execute();
+        
+        if ($stmt->get_result()->num_rows === 0) {
+            // Insert upvote record
+            $insert_query = "INSERT INTO post_upvotes (post_id, user_id, created_at) VALUES (?, ?, NOW())";
+            $stmt = $conn->prepare($insert_query);
+            $stmt->bind_param("ii", $post_id, $user_id);
+            $stmt->execute();
+
+            // Update post upvote count
+            $upvote_query = "UPDATE posts SET upvotes = upvotes + 1 WHERE id = ?";
+            $stmt = $conn->prepare($upvote_query);
+            $stmt->bind_param("i", $post_id);
+            $stmt->execute();
+
             $_SESSION['upvoted_posts'][$post_id] = true;
+            
+            $conn->commit();
             header("Location: post.php?post_id=$post_id&success=Upvote successful");
             exit();
         } else {
-            echo "Error: " . $conn->error;
+            $conn->rollback();
+            header("Location: post.php?post_id=$post_id&error=Already upvoted");
+            exit();
         }
-    } else {
-        echo "Error: You have already upvoted this post.";
+    } catch (Exception $e) {
+        $conn->rollback();
+        die("Error: " . $e->getMessage());
     }
 }
 ?>
