@@ -133,23 +133,25 @@ try {
         <?php endif; ?>
 
         <!-- Edit and Delete Buttons -->
+        <!-- Edit and Delete Buttons -->
         <?php if ($is_owner): ?>
             <br>
             <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
                 <a href="edit_post.php?post_id=<?php echo $post_id; ?>"
-                    style="text-decoration: none; background-color: #28a745; color: white; padding: 8px 12px; border-radius: 5px;">
+                    style="text-decoration: none; background-color: #28a745; color: white; padding: 8px 12px; border-radius: 5px; display: inline-block;">
                     ✏ Edit
                 </a>
-                <form action="posts_functions.php" method="post" style="display:inline;">
+                <form action="posts_functions.php" method="post" style="margin: 0; display: inline;">
                     <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
                     <button type="submit" name="delete_post"
                         onclick="return confirm('Are you sure you want to delete this post?');"
-                        style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                        style="background-color: #dc3545; color: white; border: none; padding: 10px 12px; border-radius: 5px; cursor: pointer; display: inline-block;">
                         🗑 Delete
                     </button>
                 </form>
             </div>
         <?php endif; ?>
+
     </section>
 
 

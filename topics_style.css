@@ -131,3 +131,35 @@ button:hover {
         width: 90%;
     }
 }
+
+/* Posts List */
+#postsList {
+    list-style: none;
+    padding: 0;
+}
+
+#postsList li {
+    background: #ffffff;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+}
+
+#postsList li:hover {
+    background: #f8f9fa;
+    transform: translateY(-3px);
+}
+
+#postsList a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #EDC716;
+}
+
+.post-meta {
+    font-size: 14px;
+    color: #555;
+    margin-top: 5px;
+}
