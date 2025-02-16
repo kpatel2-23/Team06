@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo '<script type="text/javascript"> alert("There is already an account associated with this email. Try logging in instead."); window.location="register.php"; </script>';
     }
 
-    $enc_password = md5($_POST['name']);
+    $enc_password = md5($_POST['password']);
     $permissions = trim($_POST['mgrpass']) == "1234" ? 'manager' : 'employee';
 
     $sql = "INSERT INTO users (name, email, password, role)
