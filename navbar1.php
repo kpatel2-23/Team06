@@ -161,7 +161,7 @@ $user = $result->fetch_assoc();
     </div>
 
     <div class="center-section">
-        Task Management System
+        Knowledge Managament System
     </div>
 
     <div class="profile" onclick="toggleDropdown()">
