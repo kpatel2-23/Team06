@@ -3,11 +3,6 @@ require 'db_config.php';
 
 session_start();
 
-// Ensure user is logged in
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['user_id'] = 1; // Temporary user ID for testing
-}
-
 // Get filters from URL
 $categoryFilter = isset($_GET['category']) ? $_GET['category'] : '';
 $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
