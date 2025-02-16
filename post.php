@@ -143,8 +143,8 @@ try {
                 </a>
                 <form action="posts_functions.php" method="post" style="margin: 0; display: inline;">
                     <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
-                    <button type="submit" name="delete_post"
-                        onclick="return confirm('Are you sure you want to delete this post?');"
+                    <!-- Replace your existing delete button with this -->
+                    <button type="button" onclick="showDeleteModal()"
                         style="background-color: #dc3545; color: white; border: none; padding: 10px 12px; border-radius: 5px; cursor: pointer; display: inline-block;">
                         🗑 Delete
                     </button>
@@ -177,6 +177,60 @@ try {
             <p>Please log in to add comments.</p>
         <?php endif; ?>
     </section>
+
+    <!-- Add this modal HTML at the end of your body tag but before the closing </body> -->
+    <div id="deleteModal" class="modal"
+        style="display: none; position: fixed; z-index: 1000; left: 50%; top: 50%; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-content"
+            style="background-color: #fefefe; margin: 15% auto; padding: 20px; border-radius: 5px; width: 80%; max-width: 500px;">
+            <h2>Confirm Deletion</h2>
+            <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button onclick="closeDeleteModal()" style="background-color: #6c757d;">Cancel</button>
+                <form id="deleteForm" method="post" action="posts_functions.php" style="margin: 0;">
+                    <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
+                    <input type="hidden" name="delete_post" value="1">
+                    <button type="submit" style="background-color: #dc3545;">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this notification div after your navbar -->
+    <div id="notification"
+        style="display: none; position: fixed; top: 20px; right: 20px; background-color: #28a745; color: white; padding: 15px; border-radius: 5px; z-index: 1000;">
+    </div>
+
+    <script>
+        function showDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // Function to show notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Check for success parameter in URL
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const success = urlParams.get('success');
+            if (success) {
+                showNotification(success);
+            }
+        }
+    </script>
 </body>
+
 
 </html>
