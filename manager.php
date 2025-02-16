@@ -49,6 +49,8 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
     exit();
 }
 
+include ("notes.php");
+
 $manager_id = $_SESSION['user_id'];
 
 updateAllProjectStatuses($conn, $manager_id);
@@ -98,7 +100,6 @@ $stmt->bind_param("i", $manager_id);
 $stmt->execute();
 $projects = $stmt->get_result();
 ?>
-
 
 
 <?php include("navbar.php"); ?>
@@ -2223,6 +2224,10 @@ $projects = $stmt->get_result();
         .task-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-priority{
+            margin-top: 5px;
         }
 
         .task-header {

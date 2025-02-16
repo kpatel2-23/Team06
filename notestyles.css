@@ -1,0 +1,99 @@
+#note-container * {
+    all: revert;
+}
+
+#todo {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background-color: #f1f1f1;
+    width: 300px;
+    border: 1px solid #ddd;
+    resize: both;
+    overflow: hidden;
+    min-width: 250px;
+    min-height: 250px;
+    border-radius: 10px;
+    left: 20px;
+    top: calc(100% - 270px);
+}
+
+#todoheader {
+    padding: 20px;
+    cursor: move;
+    background-color: #333;
+    display: flex; 
+    justify-content: flex-start;
+}
+
+#todobody {
+    height: 90%;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    gap: 10px;
+}
+
+#newlbl {
+    position: relative;
+    max-width: 90%;
+    display: inline-block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    border-style: none;
+}
+
+#newlbl:focus {
+    border: none;
+    outline: none;
+}
+
+#toggleButton {
+    position: fixed;
+    width: 100px;
+    height: 115px;
+    border-radius: 5%;
+    background-color: #EDC716;
+    border-color: #EDC716;
+    box-shadow: none;
+    bottom: 20px;
+    right: 20px;
+    pointer-events: auto;
+    z-index: 9999;
+}
+
+#todoimg {
+    height: 95px;
+}
+
+#todobtn {
+    background-color: #EDC716;
+    border-radius: 5px;
+    border-style: none;
+    color: #333;
+}
+
+#taskdiv {
+    width: 100%;
+    background-color: lightgray;
+    border-radius: 5px;
+    display: flex; 
+    justify-content: flex-start;
+}
+
+#delbtn {
+    position: absolute;
+    right: 10px;
+    border-style: none;
+    background-color: transparent;
+}
+
+#deletebtn {
+    position: relative;
+    width: 10px;
+    align-items: center;
+}
+
+[contenteditable] { 
+    outline: 0px solid transparent; 
+}
