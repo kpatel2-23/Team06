@@ -178,7 +178,6 @@ try {
         <?php endif; ?>
     </section>
 
-    <!-- Add this modal HTML at the end of your body tag but before the closing </body> -->
     <div id="deleteModal" class="modal"
         style="display: none; position: fixed; z-index: 1000; left: 50%; top: 50%; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
         <div class="modal-content"
