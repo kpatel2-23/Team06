@@ -49,6 +49,8 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "manager") {
     exit();
 }
 
+include("notes.php");
+
 $manager_id = $_SESSION['user_id'];
 
 updateAllProjectStatuses($conn, $manager_id);

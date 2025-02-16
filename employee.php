@@ -7,6 +7,8 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] != "employee") {
     exit();
 }
 
+include("notes.php");
+
 $employee_id = $_SESSION["user_id"];
 
 // Fetch Overdue Tasks
