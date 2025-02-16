@@ -37,7 +37,7 @@ if (!$result) {
 $topics = $result->fetch_all(MYSQLI_ASSOC);
 ?>
 
-<?php include("navbar.php"); ?>
+<?php include("navbar1.php"); ?>
 
 <!DOCTYPE html>
 <html lang="en">

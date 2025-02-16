@@ -16,6 +16,8 @@ if (!$post) {
 }
 ?>
 
+<?php include("navbar1.php"); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,9 +27,7 @@ if (!$post) {
     <link rel="stylesheet" href="topics_style.css">
 </head>
 <body>
-    <nav>
-        <a href="post.php?post_id=<?php echo $post_id; ?>">Back to Post</a>
-    </nav>
+
     
     <header>
         <h1>Edit Post</h1>

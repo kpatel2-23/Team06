@@ -20,7 +20,7 @@ if ($post_id <= 0) {
 try {
     // Check if user is logged in
     $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
-    
+
     // Modify query based on login status
     if ($user_id > 0) {
         // User is logged in - include upvote check
@@ -55,7 +55,7 @@ try {
 
     $result = $stmt->get_result();
     $post = $result->fetch_assoc();
-    
+
     if (!$post) {
         throw new Exception("Post not found");
     }
@@ -63,7 +63,7 @@ try {
     // Set upvote status
     $has_upvoted = false;
     if ($user_id > 0) {
-        $has_upvoted = isset($post['has_upvoted']) ? (bool)$post['has_upvoted'] : false;
+        $has_upvoted = isset($post['has_upvoted']) ? (bool) $post['has_upvoted'] : false;
         if ($has_upvoted) {
             $_SESSION['upvoted_posts'][$post_id] = true;
         }
@@ -80,7 +80,7 @@ try {
         throw new Exception("Comment query preparation failed: " . $conn->error);
     }
     $stmt->bind_param("i", $post_id);
-    
+
     if (!$stmt->execute()) {
         throw new Exception("Comment query execution failed: " . $stmt->error);
     }
@@ -96,21 +96,28 @@ try {
 }
 ?>
 
+<?php include("navbar1.php"); ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title><?php echo htmlspecialchars($post['title']); ?></title>
     <link rel="stylesheet" href="topics_style.css">
 </head>
+
 <body>
-    <nav>
-        <a href="topic.php?topic_id=<?php echo $post['topic_id']; ?>">Back to Topic</a>
-    </nav>
 
     <section class="post-details">
-        <h1><?php echo htmlspecialchars($post['title']); ?></h1>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h1 style="margin-right: 10px;"><?php echo htmlspecialchars($post['title']); ?></h1>
+            <a href="topic.php?topic_id=<?php echo $post['topic_id']; ?>"
+                style="text-decoration: none; background-color: #007bff; color: white; padding: 8px 12px; border-radius: 5px;">
+                🔙 Back to Topic
+            </a>
+        </div>
+
         <p>By: <?php echo htmlspecialchars($post['username']); ?></p>
         <p><?php echo htmlspecialchars($post['content']); ?></p>
         <span>Upvotes: <?php echo $post['upvotes']; ?></span>
@@ -128,13 +135,23 @@ try {
         <!-- Edit and Delete Buttons -->
         <?php if ($is_owner): ?>
             <br>
-            <a href="edit_post.php?post_id=<?php echo $post_id; ?>">✏ Edit</a>
-            <form action="posts_functions.php" method="post" style="display:inline;">
-                <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
-                <button type="submit" name="delete_post" onclick="return confirm('Are you sure you want to delete this post?');">🗑 Delete</button>
-            </form>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                <a href="edit_post.php?post_id=<?php echo $post_id; ?>"
+                    style="text-decoration: none; background-color: #28a745; color: white; padding: 8px 12px; border-radius: 5px;">
+                    ✏ Edit
+                </a>
+                <form action="posts_functions.php" method="post" style="display:inline;">
+                    <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
+                    <button type="submit" name="delete_post"
+                        onclick="return confirm('Are you sure you want to delete this post?');"
+                        style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                        🗑 Delete
+                    </button>
+                </form>
+            </div>
         <?php endif; ?>
     </section>
+
 
     <section>
         <h2>Comments</h2>
@@ -159,4 +176,5 @@ try {
         <?php endif; ?>
     </section>
 </body>
+
 </html>

@@ -3,7 +3,6 @@ require 'db_config.php';
 
 session_start();
 
-
 $topic_id = isset($_GET['topic_id']) ? intval($_GET['topic_id']) : 0;
 if ($topic_id <= 0) {
     die("Invalid Topic");
@@ -41,7 +40,7 @@ $stmt->execute();
 $posts_result = $stmt->get_result();
 $posts = $posts_result->fetch_all(MYSQLI_ASSOC);
 ?>
-
+<?php include("navbar1.php"); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,13 +49,17 @@ $posts = $posts_result->fetch_all(MYSQLI_ASSOC);
     <link rel="stylesheet" href="topics_style.css">
 </head>
 <body>
-    <nav>
-        <a href="topics.php">Back to Topics</a>
-    </nav>
 
-    <section>
-        <h1><?php echo htmlspecialchars($topic['title']); ?></h1>
-        <p><?php echo htmlspecialchars($topic['description']); ?></p>
+    <!-- Title and Back to Knowledge Forum Button -->
+    <section style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h1><?php echo htmlspecialchars($topic['title']); ?></h1>
+            <p><?php echo htmlspecialchars($topic['description']); ?></p>
+        </div>
+        <a href="topics.php" 
+           style="text-decoration: none; background-color: #007bff; color: white; padding: 8px 12px; border-radius: 5px; font-weight: bold;">
+            🔙 Back to Knowledge Forum
+        </a>
     </section>
 
     <section>
