@@ -67,6 +67,7 @@ $user = $result->fetch_assoc();
         border-radius: 5px;
         width: 180px;
         text-align: left;
+        z-index: 1000;
     }
 
     .dropdown a {
@@ -99,6 +100,7 @@ $user = $result->fetch_assoc();
         max-width: 90%;
         font-family: 'Poppins', sans-serif;
         text-align: center;
+        z-index: 1000;
     }
 
     .nav-modal-content {
@@ -152,6 +154,30 @@ $user = $result->fetch_assoc();
         font-size: 18px;
         cursor: pointer;
     }
+
+    /* Error message */
+    .error-message {
+        color: red;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    /* Toast Notification */
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        display: none;
+        z-index: 2000;
+    }
+
+    .toast.error {
+        background: #28a745;
+    }
 </style>
 
 <div class="navbar">
@@ -185,11 +211,16 @@ $user = $result->fetch_assoc();
             <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
         </div>
         <form id="changePasswordForm">
-            <input type="password" class="input-field" name="new_password" placeholder="New Password" required>
+            <input type="password" class="input-field" name="new_password" id="newPassword" placeholder="New Password"
+                required>
+            <div id="passwordError" class="error-message"></div> <!-- Error message under input -->
             <button type="submit" class="save-btn">Update Password</button>
         </form>
     </div>
 </div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
 
 <script>
     function toggleDropdown() {
@@ -204,9 +235,61 @@ $user = $result->fetch_assoc();
         document.getElementById("profileModal").style.display = "none";
     }
 
-    window.onclick = function (event) {
-        if (!event.target.closest(".profile")) {
-            document.getElementById("profileDropdown").classList.remove("show");
-        }
-    };
+    function showToast(message, type = "success") {
+        let toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.remove("error");
+        if (type === "error") toast.classList.add("error");
+        toast.style.display = "block";
+
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 3000);
+    }
+
+
+    document.getElementById("changePasswordForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let formData = new FormData(this);
+        let passwordError = document.getElementById("passwordError");
+
+        fetch("update_password.php", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    passwordError.textContent = ""; // Clear any previous errors
+                    showToast("✅ " + data.message); // Show success toast
+                    closeProfileModal();
+                } else {
+                    passwordError.textContent = data.message; // Show error under input field
+                }
+            })
+            .catch(error => {
+                console.error("Error updating password:", error);
+                passwordError.textContent = "Password Update Successful";
+            });
+    });
+
+    function showToast(message, type = "success") {
+        let toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.remove("error");
+        if (type === "error") toast.classList.add("error");
+        toast.style.display = "block";
+
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 3000);
+    }
+
+
 </script>
