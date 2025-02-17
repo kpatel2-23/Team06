@@ -9,14 +9,22 @@ $pass_pattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[_!"£$%^&*-])[A-Za-z\d_!"
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $user_id = $_SESSION['user_id'];
     $new_password = trim($_POST['new_password']);
+    $confirm_password = trim($_POST['confirm_password']);
 
-    if (empty($new_password)) {
-        echo json_encode(["status" => "error", "message" => "Password cannot be empty."]);
+    // Check if passwords are empty
+    if (empty($new_password) || empty($confirm_password)) {
+        echo json_encode(["status" => "error", "message" => "Password fields cannot be empty."]);
         exit;
     }
 
-    if (!preg_match($pass_pattern, $new_password)) {
+    // Check if passwords match
+    if ($new_password !== $confirm_password) {
+        echo json_encode(["status" => "error", "message" => "Passwords do not match."]);
+        exit;
+    }
 
+    // Validate password pattern
+    if (!preg_match($pass_pattern, $new_password)) {
         echo json_encode(["status" => "error", "message" => "Password must be 8-32 characters, contain at least one uppercase letter, one lowercase letter, one number, and one special character (_!\"£$%^&*-)."]);
         exit;
     }
@@ -64,38 +72,49 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <div id="notification" class="notification"></div>
 
 <script>
-    document.getElementById("changePasswordForm").addEventListener("submit", function (event) {
-        event.preventDefault();
+document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
+    event.preventDefault();
 
-        let formData = new FormData(this);
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
 
-        fetch("update_password.php", {
-            method: "POST",
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                showNotification(data.message, data.status === "success" ? "success" : "error");
-
-                if (data.status === "success") {
-                    closeProfileModal();
-                }
-            })
-            .catch(error => {
-                console.error("Error updating password:", error);
-                showNotification("An error occurred. Please try again.", "error");
-            });
-    });
-
-    function showNotification(message, type) {
-        let notification = document.getElementById("notification");
-        notification.textContent = message;
-        notification.classList.remove("error", "success");
-        notification.classList.add(type);
-        notification.style.display = "block";
-
-        setTimeout(() => {
-            notification.style.display = "none";
-        }, 3000);
+    // Client-side validation
+    if (newPassword !== confirmPassword) {
+        showNotification("Passwords do not match.", "error");
+        return;
     }
+
+    let formData = new FormData(this);
+
+    fetch("update_password.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        showNotification(data.message, data.status === "success" ? "success" : "error");
+
+        if (data.status === "success") {
+            closeProfileModal();
+            // Clear form
+            this.reset();
+        }
+    })
+    .catch(error => {
+        console.error("Error updating password:", error);
+        showNotification("An error occurred. Please try again.", "error");
+    });
+});
+
+function showNotification(message, type) {
+    let notification = document.getElementById("notification");
+    notification.textContent = message;
+    notification.classList.remove("error", "success");
+    notification.classList.add(type);
+    notification.style.display = "block";
+
+    setTimeout(() => {
+        notification.style.display = "none";
+    }, 3000);
+}
 </script>

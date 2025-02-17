@@ -49,7 +49,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // If there are errors, they will be displayed on the form.
     } else {
         $enc_password = md5($password);
-        $permissions = $mgrpass == "1234" ? 'manager' : 'employee';
+        $stmt = $conn->prepare("SELECT setting_value FROM settings WHERE setting_name = 'manager_passkey'");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $manager_key = $result->fetch_assoc()['setting_value'];
+        $stmt->close();
+
+        $permissions = ($mgrpass === $manager_key) ? 'manager' : 'employee';
+
+        if (!empty($mgrpass) && $mgrpass !== $manager_key) {
+            $errors['mgrpass'] = "Invalid manager access code.";
+        }
 
         $sql = "INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$enc_password', '$permissions');";
         $conn->query($sql);
