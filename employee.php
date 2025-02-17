@@ -720,6 +720,9 @@ while ($row = $leader_result->fetch_assoc()) {
                             if (data.success) {
                                 showNotification("Task deleted successfully!");
                                 document.querySelector(`[data-task-id='${taskIdToDelete}']`).closest("li").remove();
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1000);
                             } else {
                                 showNotification("Error: " + data.message);
                             }
