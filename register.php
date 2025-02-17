@@ -330,7 +330,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // Add this to your existing toggleMgrPass function
         function toggleMgrPass() {
             var mgrDDW = document.getElementById("mgrpass");
             if (mgrDDW.style.display === 'none') {
