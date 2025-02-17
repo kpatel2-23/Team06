@@ -44,14 +44,6 @@ if (!$post) {
             
             <label for="content">Content:</label>
             <textarea id="content" name="content" required><?php echo htmlspecialchars($post['content']); ?></textarea>
-
-            <!-- File Upload -->
-            <label for="attachment">Change Attachment (Optional):</label>
-            <input type="file" id="attachment" name="attachment">
-            
-            <?php if (!empty($post['attachment'])): ?>
-                <p>Current attachment: <?php echo htmlspecialchars($post['attachment']); ?></p>
-            <?php endif; ?>
             
             <button type="submit" name="edit_post">Save Changes</button>
         </form>
