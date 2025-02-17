@@ -1,5 +1,6 @@
 <?php
 
+session_start();
 include("db_config.php");
 
 $sql = "SELECT * FROM user_notes WHERE user_id = " . $_SESSION['user_id'];
@@ -52,18 +53,18 @@ window.addEventListener("beforeunload", function(event) {
 });
 
 function saveNotes() {
-    const data = data.map(task => task.value);
-
+    // Extract only the values from data array
+    const notes = JSON.stringify(data.map(task => task.value));
+    
     $.ajax({
         url: "setnotes.php",
         type: "POST",
-        data: JSON.stringify(data),
-        contentType: "application/json",
+        data: { notes: notes },  // Send as an object with a 'notes' key
         success: function(response) {
-
+            console.log("Notes saved successfully:", response);
         }, 
         error: function(xhr, status, error) {
-
+            console.error("Error saving notes:", error);
         }
     });
 }
