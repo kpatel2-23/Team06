@@ -48,6 +48,7 @@ $posts = $posts_result->fetch_all(MYSQLI_ASSOC);
     <meta charset="UTF-8">
     <title><?php echo htmlspecialchars($topic['title']); ?> - Posts</title>
     <link rel="stylesheet" href="topics_style.css">
+    <?php include 'loader.php'; ?> <!-- Include Loader -->
 </head>
 
 <body>

@@ -105,6 +105,7 @@ try {
     <meta charset="UTF-8">
     <title><?php echo htmlspecialchars($post['title']); ?></title>
     <link rel="stylesheet" href="topics_style.css">
+    <?php include 'loader.php'; ?> <!-- Include Loader -->
 </head>
 
 <body>

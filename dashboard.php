@@ -12,3 +12,5 @@ if ($_SESSION["role"] == "manager") {
 }
 exit();
 ?>
+
+<?php include 'loader.php'; ?> <!-- Include Loader -->

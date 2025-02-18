@@ -113,6 +113,8 @@ $projects = $stmt->get_result();
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="kanban.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+    <?php include 'loader.php'; ?> <!-- Include Loader -->
 </head>
 
 <body>

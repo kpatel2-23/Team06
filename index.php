@@ -25,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Login - Make IT All</title>
     <style>
@@ -60,9 +61,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
 
         h2 {
@@ -148,29 +157,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-decoration: none;
         }
     </style>
+
+    <?php include 'loader.php'; ?> <!-- Include Loader -->
 </head>
+
 <body>
     <div class="login-container">
         <img src="TP_LOGO.png" alt="Make IT All Logo" class="logo">
         <h2>Welcome</h2>
-        
-        <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
-        
+
+        <?php if (isset($error))
+            echo "<p class='error'>$error</p>"; ?>
+
         <form method="POST">
             <div class="input-group">
                 <input type="email" name="email" placeholder="Company Email" required>
             </div>
-            
+
             <div class="input-group">
                 <input type="password" name="password" placeholder="Password" required>
             </div>
-            
+
             <button type="submit" class="login-btn">Log In</button>
         </form>
-        
+
         <a href="register.php">
             <button class="register-btn">Create Account</button>
         </a>
     </div>
 </body>
+
 </html>

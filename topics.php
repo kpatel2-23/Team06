@@ -46,6 +46,7 @@ $topics = $result->fetch_all(MYSQLI_ASSOC);
     <title>Topics & Categories</title>
     <link rel="stylesheet" href="topics_style.css">
     <script src="topics.js" defer></script>
+    <?php include 'loader.php'; ?> <!-- Include Loader -->
 </head>
 <body>
 
